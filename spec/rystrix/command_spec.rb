@@ -51,6 +51,31 @@ describe Rystrix::Command do
         expect(command.executed?).to be false
       end
     end
+
+    context 'with fallback' do
+      it 'should be true (only no fallback) if the command with no fallback is executed' do
+        command = simple_command(42)
+        fallback_command = command.with_fallback { 0 }
+        expect(command.executed?).to be false
+        expect(fallback_command.executed?).to be false
+        command.execute
+        expect(command.executed?).to be true
+        expect(fallback_command.executed?).to be false
+        fallback_command.execute
+        expect(command.executed?).to be true
+        expect(fallback_command.executed?).to be true
+      end
+
+      it 'should be true (both) if the command with fallback is executed' do
+        command = simple_command(42)
+        fallback_command = command.with_fallback { 0 }
+        expect(command.executed?).to be false
+        expect(fallback_command.executed?).to be false
+        fallback_command.execute
+        expect(command.executed?).to be true
+        expect(fallback_command.executed?).to be true
+      end
+    end
   end
 
   describe '#get' do
