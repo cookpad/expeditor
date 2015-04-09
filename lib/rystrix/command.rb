@@ -1,10 +1,12 @@
 require 'concurrent/utility/timeout'
 require 'rystrix/errors'
 require 'rystrix/rich_future'
+require 'rystrix/service'
 
 module Rystrix
   class Command
     def initialize(opts = {}, &block)
+      @service = opts.fetch(:service, Rystrix::Service.new)
       @timeout = opts[:timeout]
       @args = opts.fetch(:args, [])
       @normal_future = initial_normal(&block)
@@ -55,7 +57,7 @@ module Rystrix
     private
 
     def initial_normal(&block)
-      RichFuture.new do
+      RichFuture.new(executor: @service.executor) do
         args = run_args
         if @timeout
           Concurrent::timeout(@timeout) do
