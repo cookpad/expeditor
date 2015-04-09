@@ -1,10 +1,12 @@
+require 'concurrent/utility/timeout'
 require 'rystrix/errors'
 require 'rystrix/rich_future'
 
 module Rystrix
   class Command
     def initialize(opts = {}, &block)
-      @normal_future = RichFuture.new(&block)
+      @timeout = opts[:timeout]
+      @normal_future = initial_normal(&block)
       @fallback_future = nil
     end
 
@@ -39,6 +41,20 @@ module Rystrix
         @normal_future.wait
         if @normal_future.rejected?
           block.call(@normal_future.reason)
+        end
+      end
+    end
+
+    private
+
+    def initial_normal(&block)
+      RichFuture.new do
+        if @timeout
+          Concurrent::timeout(@timeout) do
+            block.call
+          end
+        else
+          block.call
         end
       end
     end

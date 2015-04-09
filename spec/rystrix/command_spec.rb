@@ -2,21 +2,21 @@ require 'spec_helper'
 
 describe Rystrix::Command do
 
-  def simple_command(v)
-    Rystrix::Command.new do
+  def simple_command(v, opts = {})
+    Rystrix::Command.new(opts) do
       v
     end
   end
 
-  def sleep_command(n, v)
-    Rystrix::Command.new do
+  def sleep_command(n, v, opts = {})
+    Rystrix::Command.new(opts) do
       sleep n
       v
     end
   end
 
-  def error_command(e, v)
-    Rystrix::Command.new do
+  def error_command(e, v, opts = {})
+    Rystrix::Command.new(opts) do
       raise e
       v
     end
@@ -84,6 +84,16 @@ describe Rystrix::Command do
       it 'should throw NotExecutedYetError' do
         command = simple_command(42)
         expect { command.get }.to raise_error(Rystrix::NotExecutedYetError)
+      end
+    end
+
+    context 'with timeout' do
+      it 'should throw TimeoutError' do
+        start = Time.now
+        command = sleep_command(1, 42, timeout: 0.1)
+        command.execute
+        expect { command.get }.to raise_error(Rystrix::TimeoutError)
+        expect(Time.now - start).to be < 0.11
       end
     end
   end
