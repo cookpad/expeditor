@@ -5,5 +5,9 @@ module Rystrix
     def initialize(opts = {}, &block)
       @future = RichFuture.new(&block)
     end
+
+    def execute
+      @future.execute
+    end
   end
 end
