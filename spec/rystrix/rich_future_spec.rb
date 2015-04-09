@@ -23,6 +23,38 @@ describe Rystrix::RichFuture do
     end
   end
 
+  describe '#get_or_else' do
+    context 'with success' do
+      it 'should return normal value' do
+        future = Rystrix::RichFuture.new do
+          42
+        end
+        future.execute
+        expect(future.get_or_else { 0 }).to eq(42)
+      end
+    end
+
+    context 'with recover' do
+      it 'should raise exception' do
+        future = Rystrix::RichFuture.new do
+          raise RuntimeError
+        end
+        future.execute
+        expect(future.get_or_else { 0 }).to eq(0)
+      end
+    end
+
+    context 'with also failure' do
+      it 'should raise exception' do
+        future = Rystrix::RichFuture.new do
+          raise RuntimeError
+        end
+        future.execute
+        expect { future.get_or_else { raise Exception } }.to raise_error(Exception)
+      end
+    end
+  end
+
   describe '#fail' do
     it 'should fail immediately' do
       future = Rystrix::RichFuture.new do

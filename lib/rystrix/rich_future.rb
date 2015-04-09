@@ -12,6 +12,15 @@ module Rystrix
       end
     end
 
+    def get_or_else(&block)
+      wait
+      if rejected?
+        block.call
+      else
+        value
+      end
+    end
+
     def fail(e)
       super(e)
     end
