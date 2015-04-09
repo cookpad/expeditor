@@ -14,9 +14,9 @@ module Rystrix
     end
 
     def execute
-      @normal_future.execute
+      @normal_future.safe_execute
       if @fallback_future
-        @fallback_future.execute
+        @fallback_future.safe_execute
       end
       self
     end

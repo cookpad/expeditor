@@ -28,5 +28,13 @@ module Rystrix
     def executed?
       not unscheduled?
     end
+
+    def safe_execute
+      begin
+        execute
+      rescue => e
+        fail(e)
+      end
+    end
   end
 end

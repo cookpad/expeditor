@@ -89,4 +89,44 @@ describe Rystrix::RichFuture do
       end
     end
   end
+
+  describe '#execute' do
+    context 'with thread pool overflow' do
+      it 'should throw RejectedExecutionError' do
+        executor = Concurrent::ThreadPoolExecutor.new(
+          min_threads: 1,
+          max_threads: 1,
+          max_queue: 1,
+        )
+        future1 = Rystrix::RichFuture.new(executor: executor) do
+          42
+        end
+        future2 = Rystrix::RichFuture.new(executor: executor) do
+          42
+        end
+        future1.execute
+        expect { future2.execute }.to raise_error(Rystrix::RejectedExecutionError)
+      end
+    end
+  end
+
+  describe '#safe_execute' do
+    context 'with thread pool overflow' do
+      it 'should not throw RejectedExecutionError' do
+        executor = Concurrent::ThreadPoolExecutor.new(
+          min_threads: 1,
+          max_threads: 1,
+          max_queue: 1,
+        )
+        future1 = Rystrix::RichFuture.new(executor: executor) do
+          42
+        end
+        future2 = Rystrix::RichFuture.new(executor: executor) do
+          42
+        end
+        future1.safe_execute
+        future2.safe_execute
+      end
+    end
+  end
 end

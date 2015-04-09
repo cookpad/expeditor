@@ -23,29 +23,43 @@ describe Rystrix::Command do
   end
 
   describe '#execute' do
-    it 'should not block' do
-      start = Time.now
-      command = sleep_command(1, 42)
-      command.execute
-      expect(Time.now - start).to be < 1
-    end
-
-    it 'should return self' do
-      command = simple_command(42)
-      expect(command.execute).to eq(command)
-    end
-
-    it 'should ignore from the second time' do
-      count = 0
-      command = Rystrix::Command.new do
-        count += 1
-        count
+    context 'with normal' do
+      it 'should not block' do
+        start = Time.now
+        command = sleep_command(1, 42)
+        command.execute
+        expect(Time.now - start).to be < 1
       end
-      command.execute
-      command.execute
-      command.execute
-      expect(command.get).to eq(1)
-      expect(count).to eq(1)
+
+      it 'should return self' do
+        command = simple_command(42)
+        expect(command.execute).to eq(command)
+      end
+
+      it 'should ignore from the second time' do
+        count = 0
+        command = Rystrix::Command.new do
+          count += 1
+          count
+        end
+        command.execute
+        command.execute
+        command.execute
+        expect(command.get).to eq(1)
+        expect(count).to eq(1)
+      end
+    end
+
+    context 'with thread pool overflow' do
+      it 'should throw RejectedExecutionError in #get, not #execute' do
+        service = Rystrix::Service.new(max_threads: 1, min_threads: 1, max_queue: 1)
+        command1 = simple_command(1, service: service)
+        command2 = simple_command(2, service: service)
+        command1.execute
+        command2.execute
+        expect(command1.get).to eq(1)
+        expect { command2.get }.to raise_error(Rystrix::RejectedExecutionError)
+      end
     end
   end
 
