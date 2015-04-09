@@ -34,6 +34,19 @@ describe Rystrix::Command do
       command = simple_command(42)
       expect(command.execute).to eq(command)
     end
+
+    it 'should ignore from the second time' do
+      count = 0
+      command = Rystrix::Command.new do
+        count += 1
+        count
+      end
+      command.execute
+      command.execute
+      command.execute
+      expect(command.get).to eq(1)
+      expect(count).to eq(1)
+    end
   end
 
   describe '#executed?' do
