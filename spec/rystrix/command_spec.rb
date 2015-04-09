@@ -53,5 +53,15 @@ describe Rystrix::Command do
         expect { command.get }.to raise_error(RuntimeError)
       end
     end
+
+    context 'with not executed' do
+      it 'should throw NotExecutedYetError' do
+        command = Rystrix::Command.new do
+          42
+        end
+        expect { command.get }.to raise_error(Rystrix::NotExecutedYetError)
+      end
+    end
+  end
   end
 end

@@ -1,10 +1,8 @@
+require 'rystrix/errors'
 require 'rystrix/rich_future'
 
 module Rystrix
   class Command
-
-    NotExecutedYetError = Object.new
-
     def initialize(opts = {}, &block)
       @future = RichFuture.new(&block)
     end
