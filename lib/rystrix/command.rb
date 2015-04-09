@@ -12,6 +12,10 @@ module Rystrix
       self
     end
 
+    def executed?
+      @future.executed?
+    end
+
     def get
       raise NotExecutedYetError if not @future.executed?
       @future.get

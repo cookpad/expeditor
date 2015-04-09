@@ -20,6 +20,27 @@ describe Rystrix::Command do
     end
   end
 
+  describe '#executed?' do
+    context 'with executed' do
+      it 'should be true' do
+        command = Rystrix::Command.new do
+          42
+        end
+        command.execute
+        expect(command.executed?).to be true
+      end
+    end
+
+    context 'with not executed' do
+      it 'should be false' do
+        command = Rystrix::Command.new do
+          42
+        end
+        expect(command.executed?).to be false
+      end
+    end
+  end
+
   describe '#get' do
     context 'with success' do
       it 'should return success value' do
