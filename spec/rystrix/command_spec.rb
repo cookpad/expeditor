@@ -148,4 +148,32 @@ describe Rystrix::Command do
       end
     end
   end
+
+  describe 'fallback function' do
+    context 'with normal' do
+      it 'should be normal value' do
+        command = simple_command(42).with_fallback { 0 }
+        command.execute
+        expect(command.get).to eq(42)
+      end
+    end
+
+    context 'with failure of normal' do
+      it 'should be fallback value' do
+        command = error_command(RuntimeError, 42).with_fallback { 0 }
+        command.execute
+        expect(command.get).to eq(0)
+      end
+    end
+
+    context 'with fail both' do
+      it 'should throw fallback error' do
+        command = error_command(RuntimeError, 42).with_fallback do
+          raise Exception
+        end
+        command.execute
+        expect { command.get }.to raise_error(Exception)
+      end
+    end
+  end
 end
