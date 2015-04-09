@@ -1,6 +1,6 @@
 require 'concurrent/errors'
 
 module Rystrix
-  NotExecutedYetError = Class.new(StandardError)
+  NotExecutedError = Class.new(StandardError)
   TimeoutError = Concurrent::TimeoutError
 end

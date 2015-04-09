@@ -119,9 +119,9 @@ describe Rystrix::Command do
     end
 
     context 'with not executed' do
-      it 'should throw NotExecutedYetError' do
+      it 'should throw NotExecutedError' do
         command = simple_command(42)
-        expect { command.get }.to raise_error(Rystrix::NotExecutedYetError)
+        expect { command.get }.to raise_error(Rystrix::NotExecutedError)
       end
     end
 
@@ -252,7 +252,7 @@ describe Rystrix::Command do
 
         fallback_command4.execute
 
-        # expect(command1.get).to eq(1) #=> NotExecutedYetError
+        # expect(command1.get).to eq(1) #=> NotExecutedError
         expect(fallback_command4.get).to eq(8)
         expect(Time.now - start).to be < 0.51
 

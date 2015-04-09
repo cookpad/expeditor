@@ -25,7 +25,7 @@ module Rystrix
     end
 
     def get
-      raise NotExecutedYetError if not executed?
+      raise NotExecutedError if not executed?
       @normal_future.get_or_else do
         if @fallback_future
           @fallback_future.get
