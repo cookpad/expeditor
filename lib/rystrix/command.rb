@@ -3,7 +3,7 @@ require 'rystrix/rich_future'
 module Rystrix
   class Command
 
-    NotExecuteYetError = Object.new
+    NotExecutedYetError = Object.new
 
     def initialize(opts = {}, &block)
       @future = RichFuture.new(&block)
@@ -15,7 +15,7 @@ module Rystrix
     end
 
     def get
-      raise NotExecuteYetError if not @future.executed?
+      raise NotExecutedYetError if not @future.executed?
       @future.get
     end
   end
