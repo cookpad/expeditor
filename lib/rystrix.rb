@@ -1,5 +1,2 @@
-require "rystrix/version"
-
-module Rystrix
-  # Your code goes here...
-end
+require 'rystrix/version'
+require 'rystrix/rich_future'
