@@ -14,6 +14,7 @@ module Rystrix
     end
 
     def execute
+      @args.each(&:execute)
       @normal_future.safe_execute
       if @fallback_future
         @fallback_future.safe_execute
@@ -58,7 +59,7 @@ module Rystrix
 
     def initial_normal(&block)
       RichFuture.new(executor: @service.executor) do
-        args = run_args
+        args = wait_args
         if @timeout
           Concurrent::timeout(@timeout) do
             block.call(*args)
@@ -69,8 +70,7 @@ module Rystrix
       end
     end
 
-    def run_args
-      @args.each(&:execute)
+    def wait_args
       current = Thread.current
       executor = Concurrent::ThreadPoolExecutor.new(
         min_threads: 0,
