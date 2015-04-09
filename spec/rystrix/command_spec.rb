@@ -87,5 +87,15 @@ describe Rystrix::Command do
       end
     end
   end
+
+  describe '#with_fallback' do
+    it 'should return new command and same normal_future' do
+      command = simple_command(42)
+      fallback_command = command.with_fallback do
+        0
+      end
+      expect(fallback_command).not_to eq(command)
+      # expect(fallback_command.normal_future).to eq(command.normal_future)
+    end
   end
 end
