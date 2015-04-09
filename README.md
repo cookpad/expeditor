@@ -1,4 +1,4 @@
-# Rystrix
+# Rystrix (仮)
 
 **the name "Rystrix" is temporary**
 
