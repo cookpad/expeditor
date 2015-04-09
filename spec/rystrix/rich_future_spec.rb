@@ -36,4 +36,25 @@ describe Rystrix::RichFuture do
       expect(future.reason).to eq(Exception)
     end
   end
+
+  describe '#executed?' do
+    context 'with executed' do
+      it 'should be true' do
+        future = Rystrix::RichFuture.new do
+          42
+        end
+        future.execute
+        expect(future.executed?).to be true
+      end
+    end
+
+    context 'with not executed' do
+      it 'should be false' do
+        future = Rystrix::RichFuture.new do
+          42
+        end
+        expect(future.executed?).to be false
+      end
+    end
+  end
 end

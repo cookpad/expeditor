@@ -15,5 +15,9 @@ module Rystrix
     def fail(e)
       super(e)
     end
+
+    def executed?
+      not unscheduled?
+    end
   end
 end
