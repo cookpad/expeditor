@@ -11,6 +11,13 @@ describe Rystrix::Command do
       command.execute
       expect(Time.now - start).to be < 1
     end
+
+    it 'should return self' do
+      command = Rystrix::Command.new do
+        42
+      end
+      expect(command.execute).to eq(command)
+    end
   end
 
   describe '#get' do

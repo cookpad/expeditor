@@ -11,6 +11,7 @@ module Rystrix
 
     def execute
       @future.execute
+      self
     end
 
     def get
