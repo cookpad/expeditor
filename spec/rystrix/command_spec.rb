@@ -215,4 +215,39 @@ describe Rystrix::Command do
       end
     end
   end
+
+  describe 'entire' do
+    context 'with complex example' do
+      it 'should be ok' do
+        start = Time.now
+        command1 = sleep_command(0.1, 1)
+        command2 = sleep_command(1000, 'timeout!', timeout: 0.5)
+        fallback_command2 = command2.with_fallback do |e|
+          2
+        end
+        command3 = Rystrix::Command.new(args: [command1, fallback_command2]) do |v1, v2|
+          sleep 0.2
+          v1 + v2 + 4
+        end
+        command4 = Rystrix::Command.new(args: [command2, command3]) do |v2, v3|
+          sleep 0.3
+          v2 + v3 + 8
+        end
+        fallback_command4 = command4.with_fallback do
+          8
+        end
+
+        fallback_command4.execute
+
+        # expect(command1.get).to eq(1) #=> NotExecutedYetError
+        expect(fallback_command4.get).to eq(8)
+        expect(Time.now - start).to be < 0.51
+
+        expect(command1.get).to eq(1)
+        expect(fallback_command2.get).to eq(2)
+        expect(command3.get).to eq(7)
+        expect(Time.now - start).to be < 0.72
+      end
+    end
+  end
 end
