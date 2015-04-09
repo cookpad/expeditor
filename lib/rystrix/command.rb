@@ -6,6 +6,7 @@ module Rystrix
   class Command
     def initialize(opts = {}, &block)
       @timeout = opts[:timeout]
+      @args = opts.fetch(:args, [])
       @normal_future = initial_normal(&block)
       @fallback_future = nil
     end
@@ -49,14 +50,20 @@ module Rystrix
 
     def initial_normal(&block)
       RichFuture.new do
+        args = run_args
         if @timeout
           Concurrent::timeout(@timeout) do
-            block.call
+            block.call(*args)
           end
         else
-          block.call
+          block.call(*args)
         end
       end
+    end
+
+    def run_args
+      @args.each(&:execute)
+      @args.map(&:get)
     end
   end
 end

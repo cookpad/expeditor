@@ -108,4 +108,44 @@ describe Rystrix::Command do
       # expect(fallback_command.normal_future).to eq(command.normal_future)
     end
   end
+
+  describe 'args function' do
+    context 'with normal and no sleep' do
+      it 'should be ok' do
+        command1 = simple_command('The world of truth is...: ')
+        command2 = simple_command(42)
+        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+          v1 + v2.to_s
+        end
+        command3.execute
+        expect(command3.get).to eq('The world of truth is...: 42')
+      end
+    end
+
+    context 'with normal and sleep' do
+      it 'should execute args concurrently' do
+        start = Time.now
+        command1 = sleep_command(0.1, 1)
+        command2 = sleep_command(0.2, 2)
+        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+          v1 + v2
+        end
+        command3.execute
+        expect(command3.get).to eq(3)
+        expect(Time.now - start).to be < 0.21
+      end
+    end
+
+    context 'with failure' do
+      it 'should throw error of args' do
+        command1 = simple_command(42)
+        command2 = error_command(RuntimeError, 42)
+        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+          v1 + v2
+        end
+        command3.execute
+        expect { command3.get }.to raise_error(RuntimeError)
+      end
+    end
+  end
 end
