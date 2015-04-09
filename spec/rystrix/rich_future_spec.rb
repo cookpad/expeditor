@@ -22,4 +22,18 @@ describe Rystrix::RichFuture do
       end
     end
   end
+
+  describe '#fail' do
+    it 'should fail immediately' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        42
+      end
+      future.execute
+      future.fail(Exception)
+      expect(future.completed?).to be true
+      expect(future.rejected?).to be true
+      expect(future.reason).to eq(Exception)
+    end
+  end
 end

@@ -11,5 +11,9 @@ module Rystrix
         value
       end
     end
+
+    def fail(e)
+      super(e)
+    end
   end
 end
