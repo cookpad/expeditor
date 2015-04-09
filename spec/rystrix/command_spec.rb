@@ -172,6 +172,20 @@ describe Rystrix::Command do
         expect { command3.get }.to raise_error(RuntimeError)
       end
     end
+
+    context 'with sleep and failure' do
+      it 'should throw error immediately' do
+        start = Time.now
+        command1 = sleep_command(0.1, 42)
+        command2 = error_command(RuntimeError, 100)
+        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+          v1 + v2
+        end
+        command3.execute
+        expect { command3.get }.to raise_error(RuntimeError)
+        expect(Time.now - start).to be < 0.1
+      end
+    end
   end
 
   describe 'fallback function' do

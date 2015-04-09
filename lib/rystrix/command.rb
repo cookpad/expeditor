@@ -69,7 +69,24 @@ module Rystrix
 
     def run_args
       @args.each(&:execute)
-      @args.map(&:get)
+      current = Thread.current
+      executor = Concurrent::ThreadPoolExecutor.new(
+        min_threads: 0,
+        max_threads: 5,
+      )
+      args = []
+      @args.each_with_index do |c, i|
+        executor.post do
+          begin
+            args[i] = c.get
+          rescue => e
+            current.raise(e)
+          end
+        end
+      end
+      executor.shutdown
+      executor.wait_for_termination
+      args
     end
   end
 end
