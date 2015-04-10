@@ -17,6 +17,23 @@ module Rystrix
       current.increment type
     end
 
+    def total
+      update
+      acc = @statuses.inject([0, 0, 0, 0]) do |acc, s|
+        acc[0] += s.success
+        acc[1] += s.failure
+        acc[2] += s.rejection
+        acc[3] += s.timeout
+        acc
+      end
+      status = Rystrix::Status.new
+      status.success = acc[0]
+      status.failure = acc[1]
+      status.rejection = acc[2]
+      status.timeout = acc[3]
+      status
+    end
+
     def current
       update
       @statuses[@current_index]

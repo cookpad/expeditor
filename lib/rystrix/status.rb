@@ -1,13 +1,8 @@
 module Rystrix
   class Status
-    attr_reader :success
-    attr_reader :failure
-    attr_reader :rejection
-    attr_reader :timeout
-
     def initialize
-      set(0, 0, 0, 0)
       @mutex = Mutex.new
+      set(0, 0, 0, 0)
     end
 
     def increment(type)
@@ -27,18 +22,58 @@ module Rystrix
     end
 
     def reset
+      set(0, 0, 0, 0)
+    end
+
+    def success
+      @mutex.synchronize { @success }
+    end
+
+    def success=(n)
       @mutex.synchronize do
-        set(0, 0, 0, 0)
+        @success = n
       end
     end
 
-    protected
+    def failure
+      @mutex.synchronize { @failure }
+    end
+
+    def failure=(n)
+      @mutex.synchronize do
+        @failure = n
+      end
+    end
+
+    def rejection
+      @mutex.synchronize { @rejection }
+    end
+
+    def rejection=(n)
+      @mutex.synchronize do
+        @rejection = n
+      end
+    end
+
+    def timeout
+      @mutex.synchronize { @timeout }
+    end
+
+    def timeout=(n)
+      @mutex.synchronize do
+        @timeout = n
+      end
+    end
+
+    private
 
     def set(s, f, r, t)
-      @success = s
-      @failure = f
-      @rejection = r
-      @timeout = t
+      @mutex.synchronize do
+        @success = s
+        @failure = f
+        @rejection = r
+        @timeout = t
+      end
     end
   end
 end

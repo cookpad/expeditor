@@ -22,4 +22,32 @@ describe Rystrix::Bucket do
       end
     end
   end
+
+  describe '#total' do
+    context 'with no limit exceeded' do
+      it 'should be ok' do
+        size = 10
+        par = 0.05
+        bucket = Rystrix::Bucket.new(size: size, par: par)
+        size.times do |n|
+          bucket.increment :success
+          sleep par if n != size - 1
+        end
+        expect(bucket.total.success).to eq(size)
+      end
+    end
+
+    context 'with limit exceeded' do
+      it 'should be ok' do
+        size = 10
+        par = 0.01
+        bucket = Rystrix::Bucket.new(size: size, par: par)
+        bucket.increment :success
+        bucket.increment :success
+        bucket.increment :success
+        sleep par * size
+        expect(bucket.total.success).to eq(0)
+      end
+    end
+  end
 end
