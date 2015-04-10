@@ -33,5 +33,19 @@ describe Rystrix::Status do
         expect(status.success).to eq(1000)
       end
     end
+
+    context 'with all increment' do
+      it 'should be increased all' do
+        status = Rystrix::Status.new
+        status.increment :success
+        status.increment :failure
+        status.increment :rejection
+        status.increment :timeout
+        expect(status.success).to eq(1)
+        expect(status.failure).to eq(1)
+        expect(status.rejection).to eq(1)
+        expect(status.timeout).to eq(1)
+      end
+    end
   end
 end
