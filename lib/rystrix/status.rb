@@ -6,25 +6,30 @@ module Rystrix
     attr_reader :timeout
 
     def initialize
-      reset
+      set(0, 0, 0, 0)
+      @mutex = Mutex.new
     end
 
     def increment(type)
-      case type
-      when :success
-        @success += 1
-      when :failure
-        @failure += 1
-      when :rejection
-        @rejection += 1
-      when :timeout
-        @timeout += 1
-      else
+      @mutex.synchronize do
+        case type
+        when :success
+          @success += 1
+        when :failure
+          @failure += 1
+        when :rejection
+          @rejection += 1
+        when :timeout
+          @timeout += 1
+        else
+        end
       end
     end
 
     def reset
-      set(0, 0, 0, 0)
+      @mutex.synchronize do
+        set(0, 0, 0, 0)
+      end
     end
 
     protected

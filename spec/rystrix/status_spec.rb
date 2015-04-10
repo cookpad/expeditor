@@ -21,6 +21,17 @@ describe Rystrix::Status do
         expect(status.rejection).to eq(0)
         expect(status.timeout).to eq(0)
       end
+
+      it 'should be increased normally if #increment is called in parallel' do
+        status = Rystrix::Status.new
+        threads = 1000.times.map do
+          Thread.start do
+            status.increment :success
+          end
+        end
+        threads.each(&:join)
+        expect(status.success).to eq(1000)
+      end
     end
   end
 end
