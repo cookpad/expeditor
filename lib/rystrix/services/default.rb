@@ -20,6 +20,10 @@ module Rystrix
 
       def timeout
       end
+
+      def open?
+        false
+      end
     end
   end
 end

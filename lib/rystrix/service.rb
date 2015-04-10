@@ -7,6 +7,8 @@ module Rystrix
     def initialize(opts = {})
       @executor = Concurrent::ThreadPoolExecutor.new(opts)
       @bucket = Rystrix::Bucket.new(opts)
+      @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
+      @non_break_count = opts.fetch(:non_break_count, 100) # is 100 ok?
     end
 
     def success
@@ -23,6 +25,18 @@ module Rystrix
 
     def timeout
       @bucket.increment :timeout
+    end
+
+    # break circuit?
+    def open?
+      s = @bucket.total
+      total_count = s.success + s.failure + s.rejection + s.timeout
+      if total_count > [@non_break_count, 0].max
+        failure_count = s.failure + s.timeout # also rejection?
+        failure_count.to_f / total_count.to_f >= @threshold
+      else
+        false
+      end
     end
   end
 end
