@@ -167,6 +167,44 @@ describe Rystrix::Command do
     end
   end
 
+  describe '#wait' do
+    context 'with single' do
+      it 'should wait execution' do
+        start_time = Time.now
+        command = sleep_command(0.1, 42)
+        command.execute
+        command.wait
+        expect(Time.now - start_time).to be > 0.1
+      end
+    end
+
+    context 'with fallback' do
+      it 'should wait execution' do
+        start_time = Time.now
+        command = Rystrix::Command.new do
+          sleep 0.1
+          raise RuntimeError
+        end
+        command_with_f = command.with_fallback do
+          sleep 0.1
+          42
+        end
+        command_with_f.execute
+        command.wait
+        expect(Time.now - start_time).to be_between(0.1, 0.11).inclusive
+        command_with_f.wait
+        expect(Time.now - start_time).to be_between(0.2, 0.21).inclusive
+      end
+    end
+
+    context 'with not executed' do
+      it 'should throw NotExecutedError' do
+        command = sleep_command(0.1, 42)
+        expect { command.wait }.to raise_error(Rystrix::NotExecutedError)
+      end
+    end
+  end
+
   describe 'args function' do
     context 'with normal and no sleep' do
       it 'should be ok' do

@@ -44,6 +44,12 @@ module Rystrix
       command
     end
 
+    def wait
+      raise NotExecutedError if not executed?
+      @normal_future.wait
+      @fallback_future.wait if @fallback_future
+    end
+
     protected
 
     def reset_fallback(&block)
