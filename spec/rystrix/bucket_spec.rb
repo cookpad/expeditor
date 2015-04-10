@@ -50,4 +50,28 @@ describe Rystrix::Bucket do
       end
     end
   end
+
+  describe '#full?' do
+    context 'with no full' do
+      it 'should be false' do
+        size = 10
+        par = 0.01
+        bucket = Rystrix::Bucket.new(size: size, par: par)
+        sleep 0.09
+        expect(bucket.full?).to be false
+      end
+    end
+
+    context 'with full' do
+      it 'should be true' do
+        size = 10
+        par = 0.01
+        bucket = Rystrix::Bucket.new(size: size, par: par)
+        sleep 0.5
+        bucket.increment :success
+        sleep 0.5
+        expect(bucket.full?).to be true
+      end
+    end
+  end
 end
