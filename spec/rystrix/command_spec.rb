@@ -130,6 +130,12 @@ describe Rystrix::Command do
         command.execute
         expect { command.get }.to raise_error(RuntimeError)
       end
+
+      it 'should throw exception (no deadlock)' do
+        command = error_command(Exception, nil)
+        command.execute
+        expect { command.get }.to raise_error(Exception)
+      end
     end
 
     context 'with not executed' do
