@@ -6,7 +6,7 @@ require 'rystrix/service'
 module Rystrix
   class Command
     def initialize(opts = {}, &block)
-      @service = opts.fetch(:service, Rystrix::Service.new)
+      @service = opts.fetch(:service, Rystrix::Services.default)
       @timeout = opts[:timeout]
       @args = opts.fetch(:args, [])
       @normal_future = initial_normal(&block)
