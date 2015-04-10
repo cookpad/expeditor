@@ -151,7 +151,7 @@ describe Rystrix::Command do
         command = sleep_command(1, 42, timeout: 0.1)
         command.execute
         expect { command.get }.to raise_error(Rystrix::TimeoutError)
-        expect(Time.now - start).to be < 0.11
+        expect(Time.now - start).to be < 0.12
       end
     end
   end
