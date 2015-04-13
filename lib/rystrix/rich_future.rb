@@ -32,7 +32,7 @@ module Rystrix
     def safe_execute
       begin
         execute
-      rescue => e
+      rescue Exception => e
         fail(e)
       end
     end

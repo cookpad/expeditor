@@ -1,4 +1,7 @@
 require 'concurrent/utility/timeout'
+require 'concurrent/ivar'
+require 'concurrent/executor/safe_task_executor'
+require 'concurrent/configuration'
 require 'rystrix/errors'
 require 'rystrix/rich_future'
 require 'rystrix/service'
@@ -11,7 +14,7 @@ module Rystrix
       @timeout = opts[:timeout]
       @args = opts.fetch(:args, [])
       @normal_future = initial_normal(&block)
-      @fallback_future = nil
+      @fallback_var = nil
     end
 
     def execute
@@ -21,20 +24,23 @@ module Rystrix
       else
         @normal_future.safe_execute
       end
-      @fallback_future.safe_execute if @fallback_future
       self
     end
 
     def executed?
-      @normal_future.executed? and
-        if @fallback_future then @fallback_future.executed? else true end
+      @normal_future.executed?
     end
 
     def get
       raise NotExecutedError if not executed?
       @normal_future.get_or_else do
-        if @fallback_future
-          @fallback_future.get
+        if @fallback_var
+          @fallback_var.wait
+          if @fallback_var.rejected?
+            raise @fallback_var.reason
+          else
+            @fallback_var.value
+          end
         else
           raise @normal_future.reason
         end
@@ -50,16 +56,20 @@ module Rystrix
     def wait
       raise NotExecutedError if not executed?
       @normal_future.wait
-      @fallback_future.wait if @fallback_future
+      @fallback_var.wait if @fallback_var
     end
 
     protected
 
     def reset_fallback(&block)
-      @fallback_future = RichFuture.new do
-        @normal_future.wait
-        if @normal_future.rejected?
-          block.call(@normal_future.reason)
+      @fallback_var = Concurrent::IVar.new
+      @normal_future.add_observer do |_, _, reason|
+        if reason != nil
+          future = RichFuture.new(executor: Concurrent.configuration.global_task_pool) do
+            success, val, reason = Concurrent::SafeTaskExecutor.new(block, rescue_exception: true).execute(reason)
+            @fallback_var.complete(success, val, reason)
+          end
+          future.safe_execute
         end
       end
     end

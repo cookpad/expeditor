@@ -80,15 +80,12 @@ describe Rystrix::Command do
     end
 
     context 'with fallback' do
-      it 'should be true (only no fallback) if the command with no fallback is executed' do
+      it 'should be true (both) if the command with no fallback is executed' do
         command = simple_command(42)
         fallback_command = command.with_fallback { 0 }
         expect(command.executed?).to be false
         expect(fallback_command.executed?).to be false
         command.execute
-        expect(command.executed?).to be true
-        expect(fallback_command.executed?).to be false
-        fallback_command.execute
         expect(command.executed?).to be true
         expect(fallback_command.executed?).to be true
       end
@@ -164,6 +161,19 @@ describe Rystrix::Command do
       end
       expect(fallback_command).not_to eq(command)
       # expect(fallback_command.normal_future).to eq(command.normal_future)
+    end
+
+    it 'should not block' do
+      command = error_command(RuntimeError, nil)
+      command.execute
+      command.wait
+      start_time = Time.now
+      fallback_command = command.with_fallback do
+        sleep 0.1
+        0
+      end
+      expect(Time.now - start_time).to be < 0.1
+      expect(fallback_command.get).to eq(0)
     end
   end
 
@@ -283,6 +293,22 @@ describe Rystrix::Command do
         end
         command.execute
         expect { command.get }.to raise_error(Exception)
+      end
+    end
+
+    context 'with large number of commands' do
+      it 'should not throw any errors' do
+        service = Rystrix::Service.new(max_threads: 10, min_threads: 10, max_queue: 100)
+        commands = 1000.times.map do
+          Rystrix::Command.new(service: service) do
+            raise RuntimeError
+          end.with_fallback do |e|
+            1
+          end
+        end
+        commands.each(&:execute)
+        sum = commands.map(&:get).inject(:+)
+        expect(sum).to eq(1000)
       end
     end
   end
