@@ -8,7 +8,6 @@ module Rystrix
       @size = opts.fetch(:size, 10)
       @par_time = opts.fetch(:par, 1)
       @current_start = Time.now
-      @start_time = Time.now
       array = []
       @statuses = array.fill(0..(@size - 1)) do
         Rystrix::Status.new
@@ -56,6 +55,7 @@ module Rystrix
       passing = last_passing
       if passing > 0
         @current_start = @current_start + @par_time * passing
+        passing = passing.div @size + @size if passing > 2 * @size
         passing.times do
           @current_index = next_index
           @statuses[@current_index].reset
