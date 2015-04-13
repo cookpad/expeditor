@@ -27,6 +27,10 @@ module Rystrix
       @bucket.increment :timeout
     end
 
+    def break
+      @bucket.increment :break
+    end
+
     # break circuit?
     def open?
       s = @bucket.total

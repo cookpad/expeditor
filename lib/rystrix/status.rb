@@ -4,9 +4,10 @@ module Rystrix
     attr_accessor :failure
     attr_accessor :rejection
     attr_accessor :timeout
+    attr_accessor :break
 
     def initialize
-      set(0, 0, 0, 0)
+      set(0, 0, 0, 0, 0)
     end
 
     def increment(type)
@@ -19,21 +20,24 @@ module Rystrix
         @rejection += 1
       when :timeout
         @timeout += 1
+      when :break
+        @break += 1
       else
       end
     end
 
     def reset
-      set(0, 0, 0, 0)
+      set(0, 0, 0, 0, 0)
     end
 
     private
 
-    def set(s, f, r, t)
+    def set(s, f, r, t, b)
       @success = s
       @failure = f
       @rejection = r
       @timeout = t
+      @break = b
     end
   end
 end

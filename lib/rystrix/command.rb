@@ -95,6 +95,8 @@ module Rystrix
           @service.timeout
         when RejectedExecutionError
           @service.rejection
+        when CircuitBreakError
+          @service.break
         else
           @service.failure
         end
