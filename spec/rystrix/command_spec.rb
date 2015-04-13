@@ -203,7 +203,7 @@ describe Rystrix::Command do
         command.wait
         expect(Time.now - start_time).to be_between(0.1, 0.11).inclusive
         command_with_f.wait
-        expect(Time.now - start_time).to be_between(0.2, 0.21).inclusive
+        expect(Time.now - start_time).to be_between(0.2, 0.22).inclusive
       end
     end
 
