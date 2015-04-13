@@ -62,10 +62,23 @@ describe Rystrix::RichFuture do
         42
       end
       future.execute
-      future.fail(Exception)
+      future.fail(Exception.new)
       expect(future.completed?).to be true
       expect(future.rejected?).to be true
-      expect(future.reason).to eq(Exception)
+      expect(future.reason).to be_instance_of(Exception)
+    end
+
+    it 'should notify to observer' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        42
+      end
+      reason = nil
+      future.add_observer do |_, _, r|
+        reason = r
+      end
+      future.fail(RuntimeError.new)
+      expect(reason).to be_instance_of(RuntimeError)
     end
   end
 
