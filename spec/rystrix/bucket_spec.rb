@@ -42,9 +42,9 @@ describe Rystrix::Bucket do
         size = 10
         par = 0.01
         bucket = Rystrix::Bucket.new(size: size, par: par)
-        bucket.increment :success
-        bucket.increment :success
-        bucket.increment :success
+        100.times do
+          bucket.increment :success
+        end
         sleep par * size
         expect(bucket.total.success).to eq(0)
       end
