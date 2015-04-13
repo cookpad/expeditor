@@ -363,6 +363,58 @@ describe Rystrix::Command do
         command.execute
         expect { command.get }.to raise_error(Rystrix::CircuitBreakError)
       end
+
+      it 'should not count circuit break' do
+        service = Rystrix::Service.new(threshold: 0, non_break_count: 0)
+        commands = 100.times.map do
+          Rystrix::Command.new(service: service) do
+            raise Rystrix::CircuitBreakError
+          end
+        end
+        commands.map(&:execute)
+        commands.map(&:wait)
+        command = Rystrix::Command.new(service: service) do
+          42
+        end
+        command.execute
+        expect(command.get).to eq(42)
+      end
+    end
+
+    context 'with circuit break and wait' do
+      it 'should reject execution and back' do
+        service = Rystrix::Service.new(threshold: 0.2, non_break_count: 99, par: 0.01, size: 10)
+        failure_commands = 20.times.map do
+          Rystrix::Command.new(service: service) do
+            raise RuntimeError
+          end
+        end
+        success_commands = 80.times.map do
+          Rystrix::Command.new(service: service) do
+            0
+          end
+        end
+
+        failure_commands.each(&:execute)
+        failure_commands.each(&:wait)
+        start_time = Time.now
+        success_commands.each(&:execute)
+        success_commands.each(&:wait)
+        while true do
+          command = Rystrix::Command.new(service: service) do
+            42
+          end
+          command.execute
+          command.wait
+          sleep 0.001
+          begin
+            command.get
+            break
+          rescue
+          end
+        end
+        expect(Time.now - start_time).to be_between(0.09, 0.10)
+      end
     end
   end
 
