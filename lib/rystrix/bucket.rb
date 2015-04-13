@@ -8,8 +8,7 @@ module Rystrix
       @size = opts.fetch(:size, 10)
       @par_time = opts.fetch(:par, 1)
       @current_start = Time.now
-      array = []
-      @statuses = array.fill(0..(@size - 1)) do
+      @statuses = [].fill(0..(@size - 1)) do
         Rystrix::Status.new
       end
     end
