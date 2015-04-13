@@ -2,6 +2,7 @@ require 'concurrent/utility/timeout'
 require 'rystrix/errors'
 require 'rystrix/rich_future'
 require 'rystrix/service'
+require 'rystrix/services'
 
 module Rystrix
   class Command
@@ -96,6 +97,7 @@ module Rystrix
       executor = Concurrent::ThreadPoolExecutor.new(
         min_threads: 0,
         max_threads: 5,
+        max_queue: 0,
       )
       args = []
       @args.each_with_index do |c, i|
