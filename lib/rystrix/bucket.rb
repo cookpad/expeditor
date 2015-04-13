@@ -48,10 +48,6 @@ module Rystrix
       end
     end
 
-    def full?
-      all_passing >= @size
-    end
-
     private
 
     def update
@@ -67,10 +63,6 @@ module Rystrix
 
     def last_passing
       (Time.now - @current_start).div @par_time
-    end
-
-    def all_passing
-      (Time.now - @start_time).div @par_time
     end
 
     def next_index
