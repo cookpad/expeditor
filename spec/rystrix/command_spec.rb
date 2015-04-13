@@ -441,7 +441,7 @@ describe Rystrix::Command do
 
         fallback_command4.execute
 
-        # expect(command1.get).to eq(1) #=> NotExecutedError
+        expect(command1.get).to eq(1)
         expect(fallback_command4.get).to eq(8)
         expect(Time.now - start).to be < 0.52
 
