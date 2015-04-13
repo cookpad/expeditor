@@ -287,6 +287,34 @@ describe Rystrix::Command do
     end
   end
 
+  describe 'circuit break function' do
+    context 'with circuit break' do
+      it 'should prepend execution' do
+        service = Rystrix::Service.new(max_queue: 0, threshold: 0.5, non_break_count: 100, par_time: 0.1, size: 10)
+        commands = 101.times.map do
+          Rystrix::Command.new(service: service) do
+            raise RuntimeError
+          end.with_fallback do |e|
+            if e === Rystrix::CircuitBreakError
+              1
+            else
+              0
+            end
+          end
+        end
+        commands.each(&:execute)
+        commands.each(&:wait)
+        sum = commands.map(&:get).inject(:+)
+        expect(sum).to eq(0)
+        command = Rystrix::Command.new(service: service) do
+          42
+        end
+        command.execute
+        expect { command.get }.to raise_error(Rystrix::CircuitBreakError)
+      end
+    end
+  end
+
   describe 'entire' do
     context 'with complex example' do
       it 'should be ok' do

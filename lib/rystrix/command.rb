@@ -15,10 +15,12 @@ module Rystrix
 
     def execute
       @args.each(&:execute)
-      @normal_future.safe_execute
-      if @fallback_future
-        @fallback_future.safe_execute
+      if @service.open?
+        @normal_future.fail(Rystrix::CircuitBreakError)
+      else
+        @normal_future.safe_execute
       end
+      @fallback_future.safe_execute if @fallback_future
       self
     end
 
@@ -64,7 +66,7 @@ module Rystrix
     private
 
     def initial_normal(&block)
-      RichFuture.new(executor: @service.executor) do
+      future = RichFuture.new(executor: @service.executor) do
         args = wait_args
         if @timeout
           Concurrent::timeout(@timeout) do
@@ -74,6 +76,19 @@ module Rystrix
           block.call(*args)
         end
       end
+      future.add_observer do |_, _, reason|
+        case reason
+        when nil
+          @service.success
+        when TimeoutError
+          @service.timeout
+        when RejectedExecutionError
+          @service.rejection
+        else
+          @service.failure
+        end
+      end
+      future
     end
 
     def wait_args
