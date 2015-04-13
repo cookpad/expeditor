@@ -3,6 +3,7 @@ require 'rystrix/status'
 module Rystrix
   class Bucket
     def initialize(opts = {})
+      @mutex = Mutex.new
       @current_index = 0
       @size = opts.fetch(:size, 10)
       @par_time = opts.fetch(:par, 1)
@@ -15,17 +16,22 @@ module Rystrix
     end
 
     def increment(type)
-      current.increment type
+      @mutex.synchronize do
+        update
+        @statuses[@current_index].increment type
+      end
     end
 
     def total
-      update
-      acc = @statuses.inject([0, 0, 0, 0]) do |acc, s|
-        acc[0] += s.success
-        acc[1] += s.failure
-        acc[2] += s.rejection
-        acc[3] += s.timeout
-        acc
+      acc = @mutex.synchronize do
+        update
+        @statuses.inject([0, 0, 0, 0]) do |acc, s|
+          acc[0] += s.success
+          acc[1] += s.failure
+          acc[2] += s.rejection
+          acc[3] += s.timeout
+          acc
+        end
       end
       status = Rystrix::Status.new
       status.success = acc[0]
@@ -36,8 +42,10 @@ module Rystrix
     end
 
     def current
-      update
-      @statuses[@current_index]
+      @mutex.synchronize do
+        update
+        @statuses[@current_index]
+      end
     end
 
     def full?
