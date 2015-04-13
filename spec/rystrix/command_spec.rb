@@ -267,6 +267,32 @@ describe Rystrix::Command do
         expect(Time.now - start).to be < 0.1
       end
     end
+
+    context 'with large number of horizontal dependencies' do
+      it 'should be ok' do
+        commands = 1000.times.map do
+          simple_command(1)
+        end
+        command = Rystrix::Command.new(args: commands) do |*vs|
+          vs.inject(:+)
+        end
+        command.execute
+        expect(command.get).to eq(1000)
+      end
+    end
+
+    context 'with large number of vertical dependencies' do
+      it 'should be ok' do
+        command0 = simple_command(0)
+        command = 1000.times.inject(command0) do |c|
+          Rystrix::Command.new(args: [c]) do |v|
+            v + 1
+          end
+        end
+        command.execute
+        expect(command.get).to eq(1000)
+      end
+    end
   end
 
   describe 'fallback function' do
