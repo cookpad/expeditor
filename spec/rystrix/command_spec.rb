@@ -237,6 +237,72 @@ describe Rystrix::Command do
     end
   end
 
+  describe '#on_success' do
+    context 'with normal success and without fallback' do
+      it 'should run callback' do
+        command = simple_command(42)
+        res = nil
+        command.on_success do |v|
+          res = v
+        end
+        command.start.wait
+        expect(res).to eq(42)
+      end
+    end
+
+    context 'with normal success and with fallback' do
+      it 'should run callback' do
+        command = simple_command(42).with_fallback { 0 }
+        res = nil
+        command.on_success do |v|
+          res = v
+        end
+        command.start.wait
+        expect(res).to eq(42)
+      end
+    end
+
+    context 'with normal failure and without fallback' do
+      it 'should not run callback' do
+        command = error_command(RuntimeError, 42)
+        res = nil
+        command.on_success do |v|
+          res = v
+        end
+        command.start.wait
+        expect(res).to be_nil
+      end
+    end
+
+    context 'with normal failure and with fallback success' do
+      it 'should run callback' do
+        command = error_command(RuntimeError, 42).with_fallback do
+          0
+        end
+        res = nil
+        command.on_success do |v|
+          res = v
+        end
+        command.start.wait
+        expect(res).to eq(0)
+      end
+    end
+
+    context 'with normal failure and with fallback failure' do
+      it 'should not run callback' do
+        command = error_command(RuntimeError, 42).with_fallback do |e|
+          raise e
+        end
+        res = nil
+        command.on_success do |v|
+          res = v
+        end
+        command.start.wait
+        expect(res).to be_nil
+      end
+    end
+  end
+
   describe '#on_failure' do
     context 'with normal success and without fallback' do
       it 'should not run callback' do
