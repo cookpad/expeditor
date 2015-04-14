@@ -477,6 +477,20 @@ describe Rystrix::Command do
     end
   end
 
+  describe '.start' do
+    it 'should be already started' do
+      command = Rystrix::Command.start do
+        sleep 0.1
+        42
+      end
+      start_time = Time.new
+      expect(command.started?).to be true
+      command.wait
+      expect(Time.now - start_time).to be_between(0.1, 0.11)
+      expect(command.get).to be 42
+    end
+  end
+
   describe 'args function' do
     context 'with normal and no sleep' do
       it 'should be ok' do

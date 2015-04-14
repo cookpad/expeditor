@@ -90,6 +90,10 @@ module Rystrix
       ConstCommand.new(value)
     end
 
+    def self.start(opts = {}, &block)
+      Command.new(opts, &block).start
+    end
+
     protected
 
     def reset_fallback(&block)
