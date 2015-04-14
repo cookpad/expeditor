@@ -59,6 +59,7 @@ describe Rystrix::Command do
         command2.start
         expect(command1.get).to eq(1)
         expect { command2.get }.to raise_error(Rystrix::RejectedExecutionError)
+        service.shutdown
       end
     end
   end
@@ -630,6 +631,7 @@ describe Rystrix::Command do
         commands.each(&:start)
         sum = commands.map(&:get).inject(:+)
         expect(sum).to eq(1000)
+        service.shutdown
       end
     end
   end
@@ -657,6 +659,7 @@ describe Rystrix::Command do
         end
         command.start
         expect { command.get }.to raise_error(Rystrix::CircuitBreakError)
+        service.shutdown
       end
 
       it 'should not count circuit break' do
@@ -673,6 +676,7 @@ describe Rystrix::Command do
         end
         command.start
         expect(command.get).to eq(42)
+        service.shutdown
       end
     end
 
@@ -709,6 +713,7 @@ describe Rystrix::Command do
           end
         end
         expect(Time.now - start_time).to be_between(0.09, 0.10)
+        service.shutdown
       end
     end
   end
