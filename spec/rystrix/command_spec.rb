@@ -342,7 +342,7 @@ describe Rystrix::Command do
   describe 'circuit break function' do
     context 'with circuit break' do
       it 'should reject execution' do
-        service = Rystrix::Service.new(max_queue: 0, threshold: 0.5, non_break_count: 99, par: 0.01, size: 10)
+        service = Rystrix::Service.new(max_queue: 0, threshold: 0.5, non_break_count: 99, per: 0.01, size: 10)
         commands = 100.times.map do
           Rystrix::Command.new(service: service) do
             raise RuntimeError
@@ -383,7 +383,7 @@ describe Rystrix::Command do
 
     context 'with circuit break and wait' do
       it 'should reject execution and back' do
-        service = Rystrix::Service.new(threshold: 0.2, non_break_count: 99, par: 0.01, size: 10)
+        service = Rystrix::Service.new(threshold: 0.2, non_break_count: 99, per: 0.01, size: 10)
         failure_commands = 20.times.map do
           Rystrix::Command.new(service: service) do
             raise RuntimeError

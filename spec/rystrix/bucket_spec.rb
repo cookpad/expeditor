@@ -4,7 +4,7 @@ describe Rystrix::Bucket do
   describe '#increment' do
     context 'with same status' do
       it 'should be increased' do
-        bucket = Rystrix::Bucket.new(size: 10, par: 1)
+        bucket = Rystrix::Bucket.new(size: 10, per: 1)
         bucket.increment :success
         bucket.increment :success
         bucket.increment :success
@@ -14,7 +14,7 @@ describe Rystrix::Bucket do
 
     context 'across statuses' do
       it 'should be ok' do
-        bucket = Rystrix::Bucket.new(size: 10, par: 0.01)
+        bucket = Rystrix::Bucket.new(size: 10, per: 0.01)
         bucket.increment :success
         sleep 0.01
         bucket.increment :success
@@ -27,11 +27,11 @@ describe Rystrix::Bucket do
     context 'with no limit exceeded' do
       it 'should be ok' do
         size = 10
-        par = 0.05
-        bucket = Rystrix::Bucket.new(size: size, par: par)
+        per = 0.05
+        bucket = Rystrix::Bucket.new(size: size, per: per)
         size.times do |n|
           bucket.increment :success
-          sleep par if n != size - 1
+          sleep per if n != size - 1
         end
         expect(bucket.total.success).to eq(size)
       end
@@ -40,12 +40,12 @@ describe Rystrix::Bucket do
     context 'with limit exceeded' do
       it 'should be ok' do
         size = 10
-        par = 0.01
-        bucket = Rystrix::Bucket.new(size: size, par: par)
+        per = 0.01
+        bucket = Rystrix::Bucket.new(size: size, per: per)
         100.times do
           bucket.increment :success
         end
-        sleep par * size
+        sleep per * size
         expect(bucket.total.success).to eq(0)
       end
     end

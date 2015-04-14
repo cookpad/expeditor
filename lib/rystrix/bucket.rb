@@ -6,7 +6,7 @@ module Rystrix
       @mutex = Mutex.new
       @current_index = 0
       @size = opts.fetch(:size, 10)
-      @par_time = opts.fetch(:par, 1)
+      @per_time = opts.fetch(:per, 1)
       @current_start = Time.now
       @statuses = [].fill(0..(@size - 1)) do
         Rystrix::Status.new
@@ -53,7 +53,7 @@ module Rystrix
     def update
       passing = last_passing
       if passing > 0
-        @current_start = @current_start + @par_time * passing
+        @current_start = @current_start + @per_time * passing
         passing = passing.div @size + @size if passing > 2 * @size
         passing.times do
           @current_index = next_index
@@ -63,7 +63,7 @@ module Rystrix
     end
 
     def last_passing
-      (Time.now - @current_start).div @par_time
+      (Time.now - @current_start).div @per_time
     end
 
     def next_index
