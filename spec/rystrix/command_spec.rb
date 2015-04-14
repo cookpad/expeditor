@@ -546,14 +546,33 @@ describe Rystrix::Command do
 
     context 'with large number of horizontal dependencies' do
       it 'should be ok' do
-        commands = 1000.times.map do
-          simple_command(1)
+        commands = 10000.times.map do
+          sleep_command(0.01, 1)
         end
         command = Rystrix::Command.new(args: commands) do |*vs|
           vs.inject(:+)
         end
         command.start
-        expect(command.get).to eq(1000)
+        expect(command.get).to eq(10000)
+      end
+    end
+
+    context 'with large number of horizontal dependencies ^ 2 (long test case)' do
+      it 'should be ok' do
+        commands = 300.times.map do
+          commands = 300.times.map do
+            sleep_command(0.001, 1)
+          end
+          command = Rystrix::Command.new(args: commands) do |*vs|
+            vs.inject(:+)
+          end
+        end
+        command = Rystrix::Command.new(args: commands) do |*vs|
+          vs.inject(:+)
+        end
+        start = Time.now
+        command.start
+        expect(command.get).to eq(90000)
       end
     end
 
