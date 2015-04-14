@@ -237,6 +237,74 @@ describe Rystrix::Command do
     end
   end
 
+  describe '#on_failure' do
+    context 'with normal success and without fallback' do
+      it 'should not run callback' do
+        command = simple_command(42)
+        flag = false
+        command.on_failure do |e|
+          flag = true
+        end
+        command.start.wait
+        expect(flag).to be false
+      end
+    end
+
+    context 'with normal failure and without fallback' do
+      it 'should run callback' do
+        command = error_command(RuntimeError, 42)
+        flag = false
+        command.on_failure do |e|
+          flag = true
+        end
+        command.start.wait
+        expect(flag).to be true
+      end
+    end
+
+    context 'with normal success and with fallback' do
+      it 'should not run callback' do
+        command = simple_command(42).with_fallback do
+          0
+        end
+        flag = false
+        command.on_failure do |e|
+          flag = true
+        end
+        command.start.wait
+        expect(flag).to be false
+      end
+    end
+
+    context 'with normal failure and with fallback success' do
+      it 'should not run callback' do
+        command = error_command(RuntimeError, 42).with_fallback do
+          0
+        end
+        flag = false
+        command.on_failure do |e|
+          flag = true
+        end
+        command.start.wait
+        expect(flag).to be false
+      end
+    end
+
+    context 'with normal failure and with fallback failure' do
+      it 'should run callback' do
+        command = error_command(RuntimeError, 42).with_fallback do |e|
+          raise e
+        end
+        flag = false
+        command.on_failure do |e|
+          flag = true
+        end
+        command.start.wait
+        expect(flag).to be true
+      end
+    end
+  end
+
   describe 'args function' do
     context 'with normal and no sleep' do
       it 'should be ok' do

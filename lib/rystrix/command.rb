@@ -59,6 +59,20 @@ module Rystrix
       @fallback_var.wait if @fallback_var
     end
 
+    # command.on_failure do |e|
+    #   ...
+    # end
+    def on_failure(&block)
+      callback = Proc.new do |_, _, reason|
+        block.call(reason) if reason
+      end
+      if @fallback_var
+        @fallback_var.add_observer(&callback)
+      else
+        @normal_future.add_observer(&callback)
+      end
+    end
+
     protected
 
     def reset_fallback(&block)
