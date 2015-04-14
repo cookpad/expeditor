@@ -55,6 +55,33 @@ describe Rystrix::RichFuture do
     end
   end
 
+  describe '#set' do
+    it 'should success immediately' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        raise RuntimeError
+      end
+      future.execute
+      future.set(42)
+      expect(future.completed?).to be true
+      expect(future.fulfilled?).to be true
+      expect(future.get).to eq(42)
+    end
+
+    it 'should notify to observer' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        raise RuntimeError
+      end
+      value = nil
+      future.add_observer do |_, v, _|
+        value = v
+      end
+      future.set(42)
+      expect(value).to eq(42)
+    end
+  end
+
   describe '#fail' do
     it 'should fail immediately' do
       future = Rystrix::RichFuture.new do

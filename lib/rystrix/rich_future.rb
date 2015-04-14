@@ -21,6 +21,10 @@ module Rystrix
       end
     end
 
+    def set(v)
+      super(v)
+    end
+
     def fail(e)
       super(e)
     end
