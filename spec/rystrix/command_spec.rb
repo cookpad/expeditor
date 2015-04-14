@@ -716,6 +716,35 @@ describe Rystrix::Command do
         service.shutdown
       end
     end
+
+    context 'with circuit break (large case)' do
+      it 'should be ok' do
+        service = Rystrix::Service.new(threshold: 0.2, non_break_count: 9999, per: 0.1, size: 10)
+        failure_commands = 2000.times.map do
+          Rystrix::Command.new(service: service) do
+            raise RuntimeError
+          end.with_fallback do
+            sleep 0.001
+            1
+          end
+        end
+        success_commands = 8000.times.map do
+          Rystrix::Command.new(service: service) do
+            sleep 0.001
+            1
+          end
+        end
+        command = Rystrix::Command.new(
+          service: service,
+          args: failure_commands + success_commands,
+        ) do |*vs|
+          vs.inject(:+)
+        end.with_fallback { 0 }
+        command.start
+        expect(command.get).to eq(0)
+        service.shutdown
+      end
+    end
   end
 
   describe 'entire' do
