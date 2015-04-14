@@ -142,25 +142,29 @@ module Rystrix
     end
 
     def wait_args
-      current = Thread.current
-      executor = Concurrent::ThreadPoolExecutor.new(
-        min_threads: 0,
-        max_threads: 5,
-        max_queue: 0,
-      )
-      args = []
-      @args.each_with_index do |c, i|
-        executor.post do
-          begin
-            args[i] = c.get
-          rescue => e
-            current.raise(e)
+      if @args.count > 0
+        current = Thread.current
+        executor = Concurrent::ThreadPoolExecutor.new(
+          min_threads: 0,
+          max_threads: 5,
+          max_queue: 0,
+        )
+        args = []
+        @args.each_with_index do |c, i|
+          executor.post do
+            begin
+              args[i] = c.get
+            rescue => e
+              current.raise(e)
+            end
           end
         end
+        executor.shutdown
+        executor.wait_for_termination
+        args
+      else
+        []
       end
-      executor.shutdown
-      executor.wait_for_termination
-      args
     end
 
     def on(&callback)
