@@ -175,6 +175,14 @@ describe Rystrix::Command do
       expect(Time.now - start_time).to be < 0.1
       expect(fallback_command.get).to eq(0)
     end
+
+    context 'with normal success' do
+      it 'should return normal result' do
+        command = simple_command(42).with_fallback { 0 }
+        command.start
+        expect(command.get).to eq(42)
+      end
+    end
   end
 
   describe '#wait' do
@@ -204,6 +212,20 @@ describe Rystrix::Command do
         expect(Time.now - start_time).to be_between(0.1, 0.11).inclusive
         command_with_f.wait
         expect(Time.now - start_time).to be_between(0.2, 0.22).inclusive
+      end
+    end
+
+    context 'with fallback but normal success' do
+      it 'should not wait fallback execution' do
+        start_time = Time.now
+        command = simple_command(42).with_fallback do
+          sleep 0.1
+          0
+        end
+        command.start
+        command.wait
+        expect(Time.now - start_time).to be < 0.1
+        expect(command.get).to eq(42)
       end
     end
 
