@@ -22,18 +22,18 @@ describe Rystrix::Command do
     end
   end
 
-  describe '#execute' do
+  describe '#start' do
     context 'with normal' do
       it 'should not block' do
         start = Time.now
         command = sleep_command(1, 42)
-        command.execute
+        command.start
         expect(Time.now - start).to be < 1
       end
 
       it 'should return self' do
         command = simple_command(42)
-        expect(command.execute).to eq(command)
+        expect(command.start).to eq(command)
       end
 
       it 'should ignore from the second time' do
@@ -42,62 +42,62 @@ describe Rystrix::Command do
           count += 1
           count
         end
-        command.execute
-        command.execute
-        command.execute
+        command.start
+        command.start
+        command.start
         expect(command.get).to eq(1)
         expect(count).to eq(1)
       end
     end
 
     context 'with thread pool overflow' do
-      it 'should throw RejectedExecutionError in #get, not #execute' do
+      it 'should throw RejectedExecutionError in #get, not #start' do
         service = Rystrix::Service.new(max_threads: 1, min_threads: 1, max_queue: 1)
         command1 = simple_command(1, service: service)
         command2 = simple_command(2, service: service)
-        command1.execute
-        command2.execute
+        command1.start
+        command2.start
         expect(command1.get).to eq(1)
         expect { command2.get }.to raise_error(Rystrix::RejectedExecutionError)
       end
     end
   end
 
-  describe '#executed?' do
-    context 'with executed' do
+  describe '#started?' do
+    context 'with started' do
       it 'should be true' do
         command = simple_command(42)
-        command.execute
-        expect(command.executed?).to be true
+        command.start
+        expect(command.started?).to be true
       end
     end
 
-    context 'with not executed' do
+    context 'with not started' do
       it 'should be false' do
         command = simple_command(42)
-        expect(command.executed?).to be false
+        expect(command.started?).to be false
       end
     end
 
     context 'with fallback' do
-      it 'should be true (both) if the command with no fallback is executed' do
+      it 'should be true (both) if the command with no fallback is started' do
         command = simple_command(42)
         fallback_command = command.with_fallback { 0 }
-        expect(command.executed?).to be false
-        expect(fallback_command.executed?).to be false
-        command.execute
-        expect(command.executed?).to be true
-        expect(fallback_command.executed?).to be true
+        expect(command.started?).to be false
+        expect(fallback_command.started?).to be false
+        command.start
+        expect(command.started?).to be true
+        expect(fallback_command.started?).to be true
       end
 
-      it 'should be true (both) if the command with fallback is executed' do
+      it 'should be true (both) if the command with fallback is started' do
         command = simple_command(42)
         fallback_command = command.with_fallback { 0 }
-        expect(command.executed?).to be false
-        expect(fallback_command.executed?).to be false
-        fallback_command.execute
-        expect(command.executed?).to be true
-        expect(fallback_command.executed?).to be true
+        expect(command.started?).to be false
+        expect(fallback_command.started?).to be false
+        fallback_command.start
+        expect(command.started?).to be true
+        expect(fallback_command.started?).to be true
       end
     end
   end
@@ -106,7 +106,7 @@ describe Rystrix::Command do
     context 'with success' do
       it 'should return success value' do
         command = simple_command(42)
-        command.execute
+        command.start
         expect(command.get).to eq(42)
       end
     end
@@ -115,7 +115,7 @@ describe Rystrix::Command do
       it 'should block and return success value' do
         start = Time.new
         command = sleep_command(0.1, 42)
-        command.execute
+        command.start
         expect(command.get).to eq(42)
         expect(Time.now - start).to be > 0.1
       end
@@ -124,21 +124,21 @@ describe Rystrix::Command do
     context 'with failure' do
       it 'should throw exception' do
         command = error_command(RuntimeError, nil)
-        command.execute
+        command.start
         expect { command.get }.to raise_error(RuntimeError)
       end
 
       it 'should throw exception (no deadlock)' do
         command = error_command(Exception, nil)
-        command.execute
+        command.start
         expect { command.get }.to raise_error(Exception)
       end
     end
 
-    context 'with not executed' do
-      it 'should throw NotExecutedError' do
+    context 'with not started' do
+      it 'should throw NotStartedError' do
         command = simple_command(42)
-        expect { command.get }.to raise_error(Rystrix::NotExecutedError)
+        expect { command.get }.to raise_error(Rystrix::NotStartedError)
       end
     end
 
@@ -146,7 +146,7 @@ describe Rystrix::Command do
       it 'should throw TimeoutError' do
         start = Time.now
         command = sleep_command(1, 42, timeout: 0.1)
-        command.execute
+        command.start
         expect { command.get }.to raise_error(Rystrix::TimeoutError)
         expect(Time.now - start).to be < 0.12
       end
@@ -165,7 +165,7 @@ describe Rystrix::Command do
 
     it 'should not block' do
       command = error_command(RuntimeError, nil)
-      command.execute
+      command.start
       command.wait
       start_time = Time.now
       fallback_command = command.with_fallback do
@@ -182,7 +182,7 @@ describe Rystrix::Command do
       it 'should wait execution' do
         start_time = Time.now
         command = sleep_command(0.1, 42)
-        command.execute
+        command.start
         command.wait
         expect(Time.now - start_time).to be > 0.1
       end
@@ -199,7 +199,7 @@ describe Rystrix::Command do
           sleep 0.1
           42
         end
-        command_with_f.execute
+        command_with_f.start
         command.wait
         expect(Time.now - start_time).to be_between(0.1, 0.11).inclusive
         command_with_f.wait
@@ -207,10 +207,10 @@ describe Rystrix::Command do
       end
     end
 
-    context 'with not executed' do
-      it 'should throw NotExecutedError' do
+    context 'with not started' do
+      it 'should throw NotStartedError' do
         command = sleep_command(0.1, 42)
-        expect { command.wait }.to raise_error(Rystrix::NotExecutedError)
+        expect { command.wait }.to raise_error(Rystrix::NotStartedError)
       end
     end
   end
@@ -223,20 +223,20 @@ describe Rystrix::Command do
         command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
           v1 + v2.to_s
         end
-        command3.execute
+        command3.start
         expect(command3.get).to eq('The world of truth is...: 42')
       end
     end
 
     context 'with normal and sleep' do
-      it 'should execute args concurrently' do
+      it 'should start args concurrently' do
         start = Time.now
         command1 = sleep_command(0.1, 1)
         command2 = sleep_command(0.2, 2)
         command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
           v1 + v2
         end
-        command3.execute
+        command3.start
         expect(command3.get).to eq(3)
         expect(Time.now - start).to be < 0.21
       end
@@ -249,7 +249,7 @@ describe Rystrix::Command do
         command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
           v1 + v2
         end
-        command3.execute
+        command3.start
         expect { command3.get }.to raise_error(RuntimeError)
       end
     end
@@ -262,7 +262,7 @@ describe Rystrix::Command do
         command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
           v1 + v2
         end
-        command3.execute
+        command3.start
         expect { command3.get }.to raise_error(RuntimeError)
         expect(Time.now - start).to be < 0.1
       end
@@ -276,7 +276,7 @@ describe Rystrix::Command do
         command = Rystrix::Command.new(args: commands) do |*vs|
           vs.inject(:+)
         end
-        command.execute
+        command.start
         expect(command.get).to eq(1000)
       end
     end
@@ -289,7 +289,7 @@ describe Rystrix::Command do
             v + 1
           end
         end
-        command.execute
+        command.start
         expect(command.get).to eq(1000)
       end
     end
@@ -299,7 +299,7 @@ describe Rystrix::Command do
     context 'with normal' do
       it 'should be normal value' do
         command = simple_command(42).with_fallback { 0 }
-        command.execute
+        command.start
         expect(command.get).to eq(42)
       end
     end
@@ -307,7 +307,7 @@ describe Rystrix::Command do
     context 'with failure of normal' do
       it 'should be fallback value' do
         command = error_command(RuntimeError, 42).with_fallback { 0 }
-        command.execute
+        command.start
         expect(command.get).to eq(0)
       end
     end
@@ -317,7 +317,7 @@ describe Rystrix::Command do
         command = error_command(RuntimeError, 42).with_fallback do
           raise Exception
         end
-        command.execute
+        command.start
         expect { command.get }.to raise_error(Exception)
       end
     end
@@ -332,7 +332,7 @@ describe Rystrix::Command do
             1
           end
         end
-        commands.each(&:execute)
+        commands.each(&:start)
         sum = commands.map(&:get).inject(:+)
         expect(sum).to eq(1000)
       end
@@ -354,13 +354,13 @@ describe Rystrix::Command do
             end
           end
         end
-        commands.each(&:execute)
+        commands.each(&:start)
         sum = commands.map(&:get).inject(:+)
         expect(sum).to eq(0)
         command = Rystrix::Command.new(service: service) do
           42
         end
-        command.execute
+        command.start
         expect { command.get }.to raise_error(Rystrix::CircuitBreakError)
       end
 
@@ -371,12 +371,12 @@ describe Rystrix::Command do
             raise Rystrix::CircuitBreakError
           end
         end
-        commands.map(&:execute)
+        commands.map(&:start)
         commands.map(&:wait)
         command = Rystrix::Command.new(service: service) do
           42
         end
-        command.execute
+        command.start
         expect(command.get).to eq(42)
       end
     end
@@ -395,16 +395,16 @@ describe Rystrix::Command do
           end
         end
 
-        failure_commands.each(&:execute)
+        failure_commands.each(&:start)
         failure_commands.each(&:wait)
         start_time = Time.now
-        success_commands.each(&:execute)
+        success_commands.each(&:start)
         success_commands.each(&:wait)
         while true do
           command = Rystrix::Command.new(service: service) do
             42
           end
-          command.execute
+          command.start
           command.wait
           sleep 0.001
           begin
@@ -439,7 +439,7 @@ describe Rystrix::Command do
           8
         end
 
-        fallback_command4.execute
+        fallback_command4.start
 
         expect(command1.get).to eq(1)
         expect(fallback_command4.get).to eq(8)

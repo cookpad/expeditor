@@ -33,8 +33,8 @@ command4_d = command4.with_fallback do
   'command4 fallback'
 end
 
-# Execute command (all dependencies of command4_d are executed. this is non blocking)
-command4_d.execute
+# Start command (all dependencies of command4_d are executed. this is non blocking)
+command4_d.start
 
 puts Time.now - start_time #=> 0.00...
 puts command1.get          #=> command1

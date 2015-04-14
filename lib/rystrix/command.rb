@@ -17,8 +17,8 @@ module Rystrix
       @fallback_var = nil
     end
 
-    def execute
-      @args.each(&:execute)
+    def start
+      @args.each(&:start)
       if @service.open?
         @normal_future.fail(CircuitBreakError.new)
       else
@@ -27,12 +27,12 @@ module Rystrix
       self
     end
 
-    def executed?
+    def started?
       @normal_future.executed?
     end
 
     def get
-      raise NotExecutedError if not executed?
+      raise NotStartedError if not started?
       @normal_future.get_or_else do
         if @fallback_var
           @fallback_var.wait
@@ -54,7 +54,7 @@ module Rystrix
     end
 
     def wait
-      raise NotExecutedError if not executed?
+      raise NotStartedError if not started?
       @normal_future.wait
       @fallback_var.wait if @fallback_var
     end
