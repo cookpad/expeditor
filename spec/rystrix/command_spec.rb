@@ -77,7 +77,7 @@ describe Rystrix::Command do
           commands.each(&:start)
         end
         sleep 0.1
-        command = Rystrix::Command.start(service: service, args: commands) do |*vs|
+        command = Rystrix::Command.start(service: service, dependencies: commands) do |*vs|
           vs.inject(:+)
         end
         expect(command.get).to eq(1000)
@@ -513,12 +513,12 @@ describe Rystrix::Command do
     end
   end
 
-  describe 'args function' do
+  describe 'dependencies function' do
     context 'with normal and no sleep' do
       it 'should be ok' do
         command1 = simple_command('The world of truth is...: ')
         command2 = simple_command(42)
-        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+        command3 = Rystrix::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2.to_s
         end
         command3.start
@@ -527,11 +527,11 @@ describe Rystrix::Command do
     end
 
     context 'with normal and sleep' do
-      it 'should start args concurrently' do
+      it 'should start dependencies concurrently' do
         start = Time.now
         command1 = sleep_command(0.1, 1)
         command2 = sleep_command(0.2, 2)
-        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+        command3 = Rystrix::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
@@ -544,7 +544,7 @@ describe Rystrix::Command do
       it 'should throw error DependencyError' do
         command1 = simple_command(42)
         command2 = error_command(RuntimeError, 42)
-        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+        command3 = Rystrix::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
@@ -557,7 +557,7 @@ describe Rystrix::Command do
         start = Time.now
         command1 = sleep_command(0.1, 42)
         command2 = error_command(RuntimeError, 100)
-        command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
+        command3 = Rystrix::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
@@ -571,7 +571,7 @@ describe Rystrix::Command do
         commands = 10000.times.map do
           sleep_command(0.01, 1)
         end
-        command = Rystrix::Command.new(args: commands) do |*vs|
+        command = Rystrix::Command.new(dependencies: commands) do |*vs|
           vs.inject(:+)
         end
         command.start
@@ -585,11 +585,11 @@ describe Rystrix::Command do
           commands = 300.times.map do
             sleep_command(0.001, 1)
           end
-          command = Rystrix::Command.new(args: commands) do |*vs|
+          command = Rystrix::Command.new(dependencies: commands) do |*vs|
             vs.inject(:+)
           end
         end
-        command = Rystrix::Command.new(args: commands) do |*vs|
+        command = Rystrix::Command.new(dependencies: commands) do |*vs|
           vs.inject(:+)
         end
         start = Time.now
@@ -602,7 +602,7 @@ describe Rystrix::Command do
       it 'should be ok' do
         command0 = simple_command(0)
         command = 1000.times.inject(command0) do |c|
-          Rystrix::Command.new(args: [c]) do |v|
+          Rystrix::Command.new(dependencies: [c]) do |v|
             v + 1
           end
         end
@@ -759,7 +759,7 @@ describe Rystrix::Command do
         reason = nil
         command = Rystrix::Command.start(
           service: service,
-          args: failure_commands + success_commands,
+          dependencies: failure_commands + success_commands,
         ) do |*vs|
           vs.inject(:+)
         end.with_fallback do |e|
@@ -783,11 +783,11 @@ describe Rystrix::Command do
         fallback_command2 = command2.with_fallback do |e|
           2
         end
-        command3 = Rystrix::Command.new(args: [command1, fallback_command2]) do |v1, v2|
+        command3 = Rystrix::Command.new(dependencies: [command1, fallback_command2]) do |v1, v2|
           sleep 0.2
           v1 + v2 + 4
         end
-        command4 = Rystrix::Command.new(args: [command2, command3]) do |v2, v3|
+        command4 = Rystrix::Command.new(dependencies: [command2, command3]) do |v2, v3|
           sleep 0.3
           v2 + v3 + 8
         end

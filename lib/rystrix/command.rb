@@ -12,13 +12,13 @@ module Rystrix
     def initialize(opts = {}, &block)
       @service = opts.fetch(:service, Rystrix::Services.default)
       @timeout = opts[:timeout]
-      @args = opts.fetch(:args, [])
+      @dependencies = opts.fetch(:dependencies, [])
       @normal_future = initial_normal(&block)
       @fallback_var = nil
     end
 
     def start
-      @args.each(&:start)
+      @dependencies.each(&:start)
       if @service.open?
         @normal_future.safe_fail(CircuitBreakError.new)
       else
@@ -115,7 +115,7 @@ module Rystrix
 
     def initial_normal(&block)
       future = RichFuture.new(executor: @service.executor) do
-        args = wait_args
+        args = wait_dependencies
         if @timeout
           Concurrent::timeout(@timeout) do
             block.call(*args)
@@ -143,8 +143,8 @@ module Rystrix
       future
     end
 
-    def wait_args
-      if @args.count > 0
+    def wait_dependencies
+      if @dependencies.count > 0
         current = Thread.current
         executor = Concurrent::ThreadPoolExecutor.new(
           min_threads: 0,
@@ -152,7 +152,7 @@ module Rystrix
           max_queue: 0,
         )
         args = []
-        @args.each_with_index do |c, i|
+        @dependencies.each_with_index do |c, i|
           executor.post do
             begin
               args[i] = c.get
@@ -180,7 +180,7 @@ module Rystrix
     class ConstCommand < Command
       def initialize(value)
         @service = Rystrix::Services.default
-        @args = []
+        @dependencies = []
         @normal_future = RichFuture.new {}.set(value)
       end
     end

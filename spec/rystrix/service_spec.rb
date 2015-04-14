@@ -80,7 +80,7 @@ describe Rystrix::Service do
           1
         end
       end
-      command = Rystrix::Command.start(service: service, args: commands) do |*vs|
+      command = Rystrix::Command.start(service: service, dependencies: commands) do |*vs|
         vs.inject(:+)
       end
       service.shutdown
