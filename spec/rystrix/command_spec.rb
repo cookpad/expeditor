@@ -237,6 +237,100 @@ describe Rystrix::Command do
     end
   end
 
+  describe '#on_complete' do
+    context 'with normal success and without fallback' do
+      it 'should run callback with success' do
+        command = simple_command(42)
+        success = nil
+        value = nil
+        reason = nil
+        command.on_complete do |s, v, r|
+          success = s
+          value = v
+          reason = r
+        end
+        command.start.wait
+        expect(success).to be true
+        expect(value).to eq(42)
+        expect(reason).to be_nil
+      end
+    end
+
+    context 'with normal success and with fallback' do
+      it 'should run callback with success' do
+        command = simple_command(42).with_fallback { 0 }
+        success = nil
+        value = nil
+        reason = nil
+        command.on_complete do |s, v, r|
+          success = s
+          value = v
+          reason = r
+        end
+        command.start.wait
+        expect(success).to be true
+        expect(value).to eq(42)
+        expect(reason).to be_nil
+      end
+    end
+
+    context 'with normal failure and without fallback' do
+      it 'should run callback with failure' do
+        command = error_command(RuntimeError, 42)
+        success = nil
+        value = nil
+        reason = nil
+        command.on_complete do |s, v, r|
+          success = s
+          value = v
+          reason = r
+        end
+        command.start.wait
+        expect(success).to be false
+        expect(value).to be_nil
+        expect(reason).to be_instance_of(RuntimeError)
+      end
+    end
+
+    context 'with normal failure and with fallback success' do
+      it 'should run callback with success' do
+        command = error_command(RuntimeError, 42).with_fallback { 0 }
+        success = nil
+        value = nil
+        reason = nil
+        command.on_complete do |s, v, r|
+          success = s
+          value = v
+          reason = r
+        end
+        command.start.wait
+        expect(success).to be true
+        expect(value).to eq(0)
+        expect(reason).to be_nil
+      end
+    end
+
+    context 'with normal failure and with fallback failure' do
+      it 'should run callback with failure' do
+        command = error_command(RuntimeError, 42).with_fallback do |e|
+          raise e
+        end
+        success = nil
+        value = nil
+        reason = nil
+        command.on_complete do |s, v, r|
+          success = s
+          value = v
+          reason = r
+        end
+        command.start.wait
+        expect(success).to be false
+        expect(value).to be_nil
+        expect(reason).to be_instance_of(RuntimeError)
+      end
+    end
+  end
+
   describe '#on_success' do
     context 'with normal success and without fallback' do
       it 'should run callback' do
