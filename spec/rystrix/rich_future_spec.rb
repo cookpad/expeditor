@@ -80,6 +80,48 @@ describe Rystrix::RichFuture do
       future.set(42)
       expect(value).to eq(42)
     end
+
+    it 'should throw error if it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      expect { future.set(0) }.to raise_error(Concurrent::MultipleAssignmentError)
+    end
+  end
+
+  describe '#safe_fail' do
+    it 'should fail immediately' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        raise RuntimeError
+      end
+      future.execute
+      future.safe_set(42)
+      expect(future.completed?).to be true
+      expect(future.fulfilled?).to be true
+      expect(future.get).to eq(42)
+    end
+
+    it 'should not throw error although it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      future.safe_set(0)
+    end
+
+    it 'should ignore if it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      future.safe_set(0)
+      expect(future.value).to eq(42)
+    end
   end
 
   describe '#fail' do
@@ -106,6 +148,48 @@ describe Rystrix::RichFuture do
       end
       future.fail(RuntimeError.new)
       expect(reason).to be_instance_of(RuntimeError)
+    end
+
+    it 'should throw error if it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      expect { future.fail(RuntimeError.new) }.to raise_error(Concurrent::MultipleAssignmentError)
+    end
+  end
+
+  describe '#safe_fail' do
+    it 'should fail immediately' do
+      future = Rystrix::RichFuture.new do
+        sleep 1000
+        42
+      end
+      future.execute
+      future.safe_fail(Exception.new)
+      expect(future.completed?).to be true
+      expect(future.rejected?).to be true
+      expect(future.reason).to be_instance_of(Exception)
+    end
+
+    it 'should not throw error although it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      future.safe_fail(RuntimeError.new)
+    end
+
+    it 'should ignore if it is already completed' do
+      future = Rystrix::RichFuture.new do
+        42
+      end
+      future.execute
+      future.wait
+      future.safe_fail(RuntimeError.new)
+      expect(future.value).to eq(42)
     end
   end
 

@@ -25,8 +25,16 @@ module Rystrix
       super(v)
     end
 
+    def safe_set(v)
+      set(v) unless completed?
+    end
+
     def fail(e)
       super(e)
+    end
+
+    def safe_fail(e)
+      fail(e) unless completed?
     end
 
     def executed?
