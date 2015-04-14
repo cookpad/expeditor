@@ -63,13 +63,8 @@ module Rystrix
     #   ...
     # end
     def on_complete(&block)
-      callback = Proc.new do |_, value, reason|
+      on do |_, value, reason|
         block.call(reason == nil, value, reason)
-      end
-      if @fallback_var
-        @fallback_var.add_observer(&callback)
-      else
-        @normal_future.add_observer(&callback)
       end
     end
 
@@ -77,13 +72,8 @@ module Rystrix
     #   ...
     # end
     def on_success(&block)
-      callback = Proc.new do |_, value, reason|
+      on do |_, value, reason|
         block.call(value) unless reason
-      end
-      if @fallback_var
-        @fallback_var.add_observer(&callback)
-      else
-        @normal_future.add_observer(&callback)
       end
     end
 
@@ -91,13 +81,8 @@ module Rystrix
     #   ...
     # end
     def on_failure(&block)
-      callback = Proc.new do |_, _, reason|
+      on do |_, _, reason|
         block.call(reason) if reason
-      end
-      if @fallback_var
-        @fallback_var.add_observer(&callback)
-      else
-        @normal_future.add_observer(&callback)
       end
     end
 
@@ -168,6 +153,14 @@ module Rystrix
       executor.shutdown
       executor.wait_for_termination
       args
+    end
+
+    def on(&callback)
+      if @fallback_var
+        @fallback_var.add_observer(&callback)
+      else
+        @normal_future.add_observer(&callback)
+      end
     end
   end
 end
