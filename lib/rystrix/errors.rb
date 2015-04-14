@@ -5,4 +5,10 @@ module Rystrix
   TimeoutError = Concurrent::TimeoutError
   RejectedExecutionError = Concurrent::RejectedExecutionError
   CircuitBreakError = Class.new(StandardError)
+  class DependencyError < StandardError
+    attr :error
+    def initialize(e)
+      @error = e
+    end
+  end
 end

@@ -31,6 +31,10 @@ module Rystrix
       @bucket.increment :break
     end
 
+    def dependency
+      @bucket.increment :dependency
+    end
+
     # break circuit?
     def open?
       s = @bucket.total

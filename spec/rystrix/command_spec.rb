@@ -541,14 +541,14 @@ describe Rystrix::Command do
     end
 
     context 'with failure' do
-      it 'should throw error of args' do
+      it 'should throw error DependencyError' do
         command1 = simple_command(42)
         command2 = error_command(RuntimeError, 42)
         command3 = Rystrix::Command.new(args: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
-        expect { command3.get }.to raise_error(RuntimeError)
+        expect { command3.get }.to raise_error(Rystrix::DependencyError)
       end
     end
 
@@ -561,7 +561,7 @@ describe Rystrix::Command do
           v1 + v2
         end
         command3.start
-        expect { command3.get }.to raise_error(RuntimeError)
+        expect { command3.get }.to raise_error(Rystrix::DependencyError)
         expect(Time.now - start).to be < 0.1
       end
     end

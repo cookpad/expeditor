@@ -134,6 +134,8 @@ module Rystrix
           @service.rejection
         when CircuitBreakError
           @service.break
+        when DependencyError
+          @service.dependency
         else
           @service.failure
         end
@@ -155,7 +157,7 @@ module Rystrix
             begin
               args[i] = c.get
             rescue => e
-              current.raise(e)
+              current.raise(DependencyError.new(e))
             end
           end
         end

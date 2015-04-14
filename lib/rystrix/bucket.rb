@@ -23,12 +23,13 @@ module Rystrix
     def total
       acc = @mutex.synchronize do
         update
-        @statuses.inject([0, 0, 0, 0, 0]) do |acc, s|
+        @statuses.inject([0, 0, 0, 0, 0, 0]) do |acc, s|
           acc[0] += s.success
           acc[1] += s.failure
           acc[2] += s.rejection
           acc[3] += s.timeout
           acc[4] += s.break
+          acc[5] += s.dependency
           acc
         end
       end
@@ -38,6 +39,7 @@ module Rystrix
       status.rejection = acc[2]
       status.timeout = acc[3]
       status.break = acc[4]
+      status.dependency = acc[5]
       status
     end
 

@@ -21,6 +21,12 @@ module Rystrix
       def timeout
       end
 
+      def break
+      end
+
+      def dependency
+      end
+
       def open?
         false
       end
