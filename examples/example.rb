@@ -3,7 +3,13 @@ require 'rystrix'
 start_time = Time.now
 
 # Create new service (it is containing a thread pool and circuit breaker function)
-service = Rystrix::Service.new
+service = Rystrix::Service.new(
+  min_threads: 5,      # minimum number of threads
+  max_threads: 5,      # maximum number of threads
+  max_queue: 0,        # max size of task queue (including executing threads)
+  non_break_count: 10, # max count of non break
+  threshold: 0.5,      # failure rate to break (0.0 - 1.0)
+)
 
 # Create commands
 command1 = Rystrix::Command.new(service: service) do
