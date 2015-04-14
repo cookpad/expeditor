@@ -61,4 +61,30 @@ describe Rystrix::Service do
       end
     end
   end
+
+  describe '#shutdown' do
+    it 'should reject execution' do
+      service = Rystrix::Service.new
+      service.shutdown
+      command = Rystrix::Command.start(service: service) do
+        42
+      end
+      expect { command.get }.to raise_error(Rystrix::RejectedExecutionError)
+    end
+
+    it 'should not kill queued tasks' do
+      service = Rystrix::Service.new
+      commands = 100.times.map do
+        Rystrix::Command.new(service: service) do
+          sleep 0.1
+          1
+        end
+      end
+      command = Rystrix::Command.start(service: service, args: commands) do |*vs|
+        vs.inject(:+)
+      end
+      service.shutdown
+      expect(command.get).to eq(100)
+    end
+  end
 end

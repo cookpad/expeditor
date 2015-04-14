@@ -42,5 +42,11 @@ module Rystrix
         false
       end
     end
+
+    # shutdown thread pool
+    # after shutdown, if you create thread, RejectedExecutionError is raised.
+    def shutdown
+      @executor.shutdown
+    end
   end
 end
