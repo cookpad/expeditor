@@ -20,7 +20,7 @@ module Rystrix
     def start
       @args.each(&:start)
       if @service.open?
-        @normal_future.fail(CircuitBreakError.new)
+        @normal_future.safe_fail(CircuitBreakError.new)
       else
         @normal_future.safe_execute
       end

@@ -62,6 +62,27 @@ describe Rystrix::Command do
         service.shutdown
       end
     end
+
+    context 'with double starting' do
+      it 'should not throw MultipleAssignmentError' do
+        service = Rystrix::Service.new(threshold: 0, non_break_count: 0, per: 0.01, size: 10)
+        commands = 1000.times.map do
+          Rystrix::Command.start(service: service) do
+            raise RuntimeError
+          end.with_fallback do
+            1
+          end
+        end
+        10.times do
+          commands.each(&:start)
+        end
+        sleep 0.1
+        command = Rystrix::Command.start(service: service, args: commands) do |*vs|
+          vs.inject(:+)
+        end
+        expect(command.get).to eq(1000)
+      end
+    end
   end
 
   describe '#started?' do
