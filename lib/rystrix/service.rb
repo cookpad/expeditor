@@ -40,7 +40,7 @@ module Rystrix
       s = @bucket.total
       total_count = s.success + s.failure + s.timeout
       if total_count > [@non_break_count, 0].max
-        failure_count = s.failure + s.timeout # also rejection?
+        failure_count = s.failure + s.timeout
         failure_count.to_f / total_count.to_f >= @threshold
       else
         false
