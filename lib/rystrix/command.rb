@@ -86,6 +86,10 @@ module Rystrix
       end
     end
 
+    def self.const(value)
+      ConstCommand.new(value)
+    end
+
     protected
 
     def reset_fallback(&block)
@@ -160,6 +164,14 @@ module Rystrix
         @fallback_var.add_observer(&callback)
       else
         @normal_future.add_observer(&callback)
+      end
+    end
+
+    class ConstCommand < Command
+      def initialize(value)
+        @service = Rystrix::Services.default
+        @args = []
+        @normal_future = RichFuture.new {}.set(value)
       end
     end
   end

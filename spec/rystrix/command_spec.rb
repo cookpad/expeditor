@@ -465,6 +465,18 @@ describe Rystrix::Command do
     end
   end
 
+  describe '.const' do
+    it 'should be ok' do
+      command = Rystrix::Command.const(42)
+      expect(command.started?).to be true
+      expect(command.get).to eq(42)
+      expect(command.start).to eq(command)
+      command_f = command.with_fallback { 0 }
+      expect(command_f.get).to eq(42)
+      command.wait
+    end
+  end
+
   describe 'args function' do
     context 'with normal and no sleep' do
       it 'should be ok' do
