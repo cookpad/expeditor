@@ -52,7 +52,7 @@ describe Expeditor::Command do
 
     context 'with thread pool overflow' do
       it 'should throw RejectedExecutionError in #get, not #start' do
-        service = Expeditor::Service.new(max_threads: 1, min_threads: 1, max_queue: 1)
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 1, min_threads: 1, max_queue: 1))
         command1 = simple_command(1, service: service)
         command2 = simple_command(2, service: service)
         command1.start
@@ -641,7 +641,7 @@ describe Expeditor::Command do
 
     context 'with large number of commands' do
       it 'should not throw any errors' do
-        service = Expeditor::Service.new(max_threads: 10, min_threads: 10, max_queue: 100)
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 10, min_threads: 10, max_queue: 100))
         commands = 1000.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
@@ -660,7 +660,7 @@ describe Expeditor::Command do
   describe 'circuit break function' do
     context 'with circuit break' do
       it 'should reject execution' do
-        service = Expeditor::Service.new(max_queue: 0, threshold: 0.5, non_break_count: 99, per: 0.01, size: 10)
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_queue: 0), threshold: 0.5, non_break_count: 99, per: 0.01, size: 10)
         commands = 100.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
@@ -740,7 +740,7 @@ describe Expeditor::Command do
 
     context 'with circuit break (large case)' do
       it 'should be ok' do
-        service = Expeditor::Service.new(max_threads: 100, threshold: 0.2, non_break_count: 9999, per: 1, size: 10)
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100), threshold: 0.2, non_break_count: 9999, per: 1, size: 10)
         failure_commands = 2000.times.map do
           Expeditor::Command.start(service: service) do
             raise RuntimeError
