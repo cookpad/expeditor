@@ -20,7 +20,7 @@ describe Expeditor::Service do
           non_break_count: 100,
         }
         service = Expeditor::Service.new(options)
-        100.times do
+        99.times do
           service.failure
         end
         expect(service.open?).to be false
@@ -31,7 +31,7 @@ describe Expeditor::Service do
       it 'should be false' do
         options = {
           threshold: 0.2,
-          non_break_count: 99,
+          non_break_count: 100,
         }
         service = Expeditor::Service.new(options)
         81.times do
@@ -48,7 +48,7 @@ describe Expeditor::Service do
       it 'should be true' do
         options = {
           threshold: 0.2,
-          non_break_count: 99,
+          non_break_count: 100,
         }
         service = Expeditor::Service.new(options)
         80.times do
@@ -76,7 +76,7 @@ describe Expeditor::Service do
       service = Expeditor::Service.new
       commands = 100.times.map do
         Expeditor::Command.new(service: service) do
-          sleep 0.1
+          sleep 0.01
           1
         end
       end
