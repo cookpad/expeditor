@@ -1,7 +1,7 @@
 require 'concurrent/configuration'
 require 'concurrent/future'
 
-module Rystrix
+module Expeditor
   class RichFuture < Concurrent::Future
     def get
       wait

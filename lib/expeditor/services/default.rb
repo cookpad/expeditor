@@ -1,9 +1,9 @@
 require 'concurrent/configuration'
-require 'rystrix/service'
+require 'expeditor/service'
 
-module Rystrix
+module Expeditor
   module Services
-    class Default < Rystrix::Service
+    class Default < Expeditor::Service
       def initialize
         @executor = Concurrent.configuration.global_task_pool
         @bucket = nil

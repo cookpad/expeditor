@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Rystrix::Service do
+describe Expeditor::Service do
   describe '#open?' do
     context 'with no count' do
       it 'should be false' do
@@ -8,7 +8,7 @@ describe Rystrix::Service do
           threshold: 0,
           non_break_count: 0,
         }
-        service = Rystrix::Service.new(options)
+        service = Expeditor::Service.new(options)
         expect(service.open?).to be false
       end
     end
@@ -19,7 +19,7 @@ describe Rystrix::Service do
           threshold: 0.0,
           non_break_count: 100,
         }
-        service = Rystrix::Service.new(options)
+        service = Expeditor::Service.new(options)
         100.times do
           service.failure
         end
@@ -33,7 +33,7 @@ describe Rystrix::Service do
           threshold: 0.2,
           non_break_count: 99,
         }
-        service = Rystrix::Service.new(options)
+        service = Expeditor::Service.new(options)
         81.times do
           service.success
         end
@@ -50,7 +50,7 @@ describe Rystrix::Service do
           threshold: 0.2,
           non_break_count: 99,
         }
-        service = Rystrix::Service.new(options)
+        service = Expeditor::Service.new(options)
         80.times do
           service.success
         end
@@ -64,23 +64,23 @@ describe Rystrix::Service do
 
   describe '#shutdown' do
     it 'should reject execution' do
-      service = Rystrix::Service.new
+      service = Expeditor::Service.new
       service.shutdown
-      command = Rystrix::Command.start(service: service) do
+      command = Expeditor::Command.start(service: service) do
         42
       end
-      expect { command.get }.to raise_error(Rystrix::RejectedExecutionError)
+      expect { command.get }.to raise_error(Expeditor::RejectedExecutionError)
     end
 
     it 'should not kill queued tasks' do
-      service = Rystrix::Service.new
+      service = Expeditor::Service.new
       commands = 100.times.map do
-        Rystrix::Command.new(service: service) do
+        Expeditor::Command.new(service: service) do
           sleep 0.1
           1
         end
       end
-      command = Rystrix::Command.start(service: service, dependencies: commands) do |*vs|
+      command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
         vs.inject(:+)
       end
       service.shutdown

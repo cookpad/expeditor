@@ -1,6 +1,6 @@
-require 'rystrix/status'
+require 'expeditor/status'
 
-module Rystrix
+module Expeditor
   class Bucket
     def initialize(opts = {})
       @mutex = Mutex.new
@@ -9,7 +9,7 @@ module Rystrix
       @per_time = opts.fetch(:per, 1)
       @current_start = Time.now
       @statuses = [].fill(0..(@size - 1)) do
-        Rystrix::Status.new
+        Expeditor::Status.new
       end
     end
 
@@ -33,7 +33,7 @@ module Rystrix
           acc
         end
       end
-      status = Rystrix::Status.new
+      status = Expeditor::Status.new
       status.success = acc[0]
       status.failure = acc[1]
       status.rejection = acc[2]

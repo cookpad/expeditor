@@ -1,15 +1,13 @@
-# Rystrix (仮)
+# Expeditor
 
-**the name "Rystrix" is temporary**
-
-Rystrix is a Ruby library inspired by Netflix/Hystrix.
+Expeditor is a Ruby library inspired by Netflix/Hystrix.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'rystrix'
+gem 'expeditor'
 ```
 
 And then execute:
@@ -18,7 +16,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install rystrix
+    $ gem install expeditor
 
 ## Usage
 
@@ -32,7 +30,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/rystrix/fork )
+1. Fork it ( https://github.com/[my-github-username]/expeditor/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

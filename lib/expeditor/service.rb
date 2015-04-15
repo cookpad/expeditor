@@ -1,12 +1,12 @@
 require 'concurrent/executor/thread_pool_executor'
 
-module Rystrix
+module Expeditor
   class Service
     attr :executor
 
     def initialize(opts = {})
       @executor = Concurrent::ThreadPoolExecutor.new(opts)
-      @bucket = Rystrix::Bucket.new(opts)
+      @bucket = Expeditor::Bucket.new(opts)
       @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
       @non_break_count = opts.fetch(:non_break_count, 100) # is 100 ok?
     end

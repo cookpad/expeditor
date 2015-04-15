@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe Rystrix::Bucket do
+describe Expeditor::Bucket do
   describe '#increment' do
     context 'with same status' do
       it 'should be increased' do
-        bucket = Rystrix::Bucket.new(size: 10, per: 1)
+        bucket = Expeditor::Bucket.new(size: 10, per: 1)
         bucket.increment :success
         bucket.increment :success
         bucket.increment :success
@@ -14,7 +14,7 @@ describe Rystrix::Bucket do
 
     context 'across statuses' do
       it 'should be ok' do
-        bucket = Rystrix::Bucket.new(size: 10, per: 0.01)
+        bucket = Expeditor::Bucket.new(size: 10, per: 0.01)
         bucket.increment :success
         sleep 0.01
         bucket.increment :success
@@ -28,7 +28,7 @@ describe Rystrix::Bucket do
       it 'should be ok' do
         size = 10
         per = 0.05
-        bucket = Rystrix::Bucket.new(size: size, per: per)
+        bucket = Expeditor::Bucket.new(size: size, per: per)
         size.times do |n|
           bucket.increment :success
           sleep per if n != size - 1
@@ -41,7 +41,7 @@ describe Rystrix::Bucket do
       it 'should be ok' do
         size = 10
         per = 0.01
-        bucket = Rystrix::Bucket.new(size: size, per: per)
+        bucket = Expeditor::Bucket.new(size: size, per: per)
         100.times do
           bucket.increment :success
         end

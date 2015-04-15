@@ -2,15 +2,15 @@ require 'concurrent/utility/timeout'
 require 'concurrent/ivar'
 require 'concurrent/executor/safe_task_executor'
 require 'concurrent/configuration'
-require 'rystrix/errors'
-require 'rystrix/rich_future'
-require 'rystrix/service'
-require 'rystrix/services'
+require 'expeditor/errors'
+require 'expeditor/rich_future'
+require 'expeditor/service'
+require 'expeditor/services'
 
-module Rystrix
+module Expeditor
   class Command
     def initialize(opts = {}, &block)
-      @service = opts.fetch(:service, Rystrix::Services.default)
+      @service = opts.fetch(:service, Expeditor::Services.default)
       @timeout = opts[:timeout]
       @dependencies = opts.fetch(:dependencies, [])
       @normal_future = initial_normal(&block)
@@ -179,7 +179,7 @@ module Rystrix
 
     class ConstCommand < Command
       def initialize(value)
-        @service = Rystrix::Services.default
+        @service = Expeditor::Services.default
         @dependencies = []
         @normal_future = RichFuture.new {}.set(value)
       end

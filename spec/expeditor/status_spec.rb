@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Rystrix::Status do
+describe Expeditor::Status do
   describe '#initialize' do
     it 'should be zero all' do
-      status = Rystrix::Status.new
+      status = Expeditor::Status.new
       expect(status.success).to eq(0)
       expect(status.failure).to eq(0)
       expect(status.rejection).to eq(0)
@@ -14,7 +14,7 @@ describe Rystrix::Status do
   describe '#increment' do
     context 'with success increment' do
       it 'should be increased only success' do
-        status = Rystrix::Status.new
+        status = Expeditor::Status.new
         status.increment :success
         expect(status.success).to eq(1)
         expect(status.failure).to eq(0)
@@ -23,7 +23,7 @@ describe Rystrix::Status do
       end
 
       it 'should be increased normally if #increment is called in parallel' do
-        status = Rystrix::Status.new
+        status = Expeditor::Status.new
         threads = 1000.times.map do
           Thread.start do
             status.increment :success
@@ -36,7 +36,7 @@ describe Rystrix::Status do
 
     context 'with all increment' do
       it 'should be increased all' do
-        status = Rystrix::Status.new
+        status = Expeditor::Status.new
         status.increment :success
         status.increment :failure
         status.increment :rejection

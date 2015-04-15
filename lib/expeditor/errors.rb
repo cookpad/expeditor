@@ -1,6 +1,6 @@
 require 'concurrent/errors'
 
-module Rystrix
+module Expeditor
   NotStartedError = Class.new(StandardError)
   TimeoutError = Concurrent::TimeoutError
   RejectedExecutionError = Concurrent::RejectedExecutionError

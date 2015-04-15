@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-describe Rystrix::RichFuture do
+describe Expeditor::RichFuture do
   describe '#get' do
     context 'with success' do
       it 'should return normal value' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           42
         end
         future.execute
@@ -14,7 +14,7 @@ describe Rystrix::RichFuture do
 
     context 'with failure' do
       it 'should raise exception' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           raise RuntimeError
         end
         future.execute
@@ -26,7 +26,7 @@ describe Rystrix::RichFuture do
   describe '#get_or_else' do
     context 'with success' do
       it 'should return normal value' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           42
         end
         future.execute
@@ -36,7 +36,7 @@ describe Rystrix::RichFuture do
 
     context 'with recover' do
       it 'should raise exception' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           raise RuntimeError
         end
         future.execute
@@ -46,7 +46,7 @@ describe Rystrix::RichFuture do
 
     context 'with also failure' do
       it 'should raise exception' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           raise RuntimeError
         end
         future.execute
@@ -57,7 +57,7 @@ describe Rystrix::RichFuture do
 
   describe '#set' do
     it 'should success immediately' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         raise RuntimeError
       end
@@ -69,7 +69,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should notify to observer' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         raise RuntimeError
       end
@@ -82,7 +82,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should throw error if it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -93,7 +93,7 @@ describe Rystrix::RichFuture do
 
   describe '#safe_fail' do
     it 'should fail immediately' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         raise RuntimeError
       end
@@ -105,7 +105,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should not throw error although it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -114,7 +114,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should ignore if it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -126,7 +126,7 @@ describe Rystrix::RichFuture do
 
   describe '#fail' do
     it 'should fail immediately' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         42
       end
@@ -138,7 +138,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should notify to observer' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         42
       end
@@ -151,7 +151,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should throw error if it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -162,7 +162,7 @@ describe Rystrix::RichFuture do
 
   describe '#safe_fail' do
     it 'should fail immediately' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         sleep 1000
         42
       end
@@ -174,7 +174,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should not throw error although it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -183,7 +183,7 @@ describe Rystrix::RichFuture do
     end
 
     it 'should ignore if it is already completed' do
-      future = Rystrix::RichFuture.new do
+      future = Expeditor::RichFuture.new do
         42
       end
       future.execute
@@ -196,7 +196,7 @@ describe Rystrix::RichFuture do
   describe '#executed?' do
     context 'with executed' do
       it 'should be true' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           42
         end
         future.execute
@@ -206,7 +206,7 @@ describe Rystrix::RichFuture do
 
     context 'with not executed' do
       it 'should be false' do
-        future = Rystrix::RichFuture.new do
+        future = Expeditor::RichFuture.new do
           42
         end
         expect(future.executed?).to be false
@@ -222,14 +222,14 @@ describe Rystrix::RichFuture do
           max_threads: 1,
           max_queue: 1,
         )
-        future1 = Rystrix::RichFuture.new(executor: executor) do
+        future1 = Expeditor::RichFuture.new(executor: executor) do
           42
         end
-        future2 = Rystrix::RichFuture.new(executor: executor) do
+        future2 = Expeditor::RichFuture.new(executor: executor) do
           42
         end
         future1.execute
-        expect { future2.execute }.to raise_error(Rystrix::RejectedExecutionError)
+        expect { future2.execute }.to raise_error(Expeditor::RejectedExecutionError)
       end
     end
   end
@@ -243,14 +243,14 @@ describe Rystrix::RichFuture do
           max_queue: 50,
         )
         futures = 1000.times.map do
-          Rystrix::RichFuture.new(executor: executor) do
+          Expeditor::RichFuture.new(executor: executor) do
             42
           end
         end
         futures.each(&:safe_execute)
         futures.each(&:wait)
         expect(futures.first.get).to eq(42)
-        expect { futures.last.get }.to raise_error(Rystrix::RejectedExecutionError)
+        expect { futures.last.get }.to raise_error(Expeditor::RejectedExecutionError)
       end
     end
   end

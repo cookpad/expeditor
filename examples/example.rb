@@ -1,9 +1,9 @@
-require 'rystrix'
+require 'expeditor'
 
 start_time = Time.now
 
 # Create new service (it is containing a thread pool and circuit breaker function)
-service = Rystrix::Service.new(
+service = Expeditor::Service.new(
   min_threads: 5,      # minimum number of threads
   max_threads: 5,      # maximum number of threads
   max_queue: 0,        # max size of task queue (including executing threads)
@@ -12,12 +12,12 @@ service = Rystrix::Service.new(
 )
 
 # Create commands
-command1 = Rystrix::Command.new(service: service) do
+command1 = Expeditor::Command.new(service: service) do
   sleep 0.1
   'command1'
 end
 
-command2 = Rystrix::Command.new(service: service, timeout: 0.5) do
+command2 = Expeditor::Command.new(service: service, timeout: 0.5) do
   sleep 1000
   'command2'
 end
@@ -26,7 +26,7 @@ command2_d = command2.with_fallback do |e|
   'command2 fallback'
 end
 
-command3 = Rystrix::Command.new(
+command3 = Expeditor::Command.new(
   service: service,
   dependencies: [command1, command2_d]
 ) do |v1, v2|
@@ -34,7 +34,7 @@ command3 = Rystrix::Command.new(
   v1 + ', ' + v2
 end
 
-command4 = Rystrix::Command.new(
+command4 = Expeditor::Command.new(
   service: service,
   dependencies: [command2, command3],
   timeout: 1

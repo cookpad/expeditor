@@ -1,4 +1,4 @@
-module Rystrix
+module Expeditor
   class Status
     attr_accessor :success
     attr_accessor :failure
