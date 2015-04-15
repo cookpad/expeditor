@@ -5,7 +5,7 @@ module Expeditor
     attr_reader :executor
 
     def initialize(opts = {})
-      @executor = Concurrent::ThreadPoolExecutor.new(opts)
+      @executor = opts.fetch(:executor) { Concurrent::ThreadPoolExecutor.new }
       @bucket = Expeditor::Bucket.new(opts)
       @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
       @non_break_count = opts.fetch(:non_break_count, 100) # is 100 ok?
