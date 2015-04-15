@@ -487,6 +487,19 @@ describe Expeditor::Command do
     end
   end
 
+  describe '#chain' do
+    context 'with normal' do
+      it 'should chain command' do
+        command = simple_command(42)
+        command_double = command.chain do |n|
+          n * 2
+        end
+        command_double.start
+        expect(command_double.get).to eq(84)
+      end
+    end
+  end
+
   describe '.const' do
     it 'should be ok' do
       command = Expeditor::Command.const(42)
