@@ -6,6 +6,7 @@ require 'expeditor/errors'
 require 'expeditor/rich_future'
 require 'expeditor/service'
 require 'expeditor/services'
+require 'retryable'
 
 module Expeditor
   class Command
@@ -15,16 +16,21 @@ module Expeditor
       @dependencies = opts.fetch(:dependencies, [])
       @normal_future = initial_normal(&block)
       @fallback_var = nil
+      @retryable_options = nil
     end
 
     def start
-      @dependencies.each(&:start)
-      if @service.open?
-        @normal_future.safe_fail(CircuitBreakError.new)
-      else
+      if not started?
+        @dependencies.each(&:start)
         @normal_future.safe_execute
       end
       self
+    end
+
+    # Equivalent to retryable gem options
+    def start_with_retry(retryable_options = {})
+      @retryable_options = retryable_options
+      start
     end
 
     def started?
@@ -119,32 +125,66 @@ module Expeditor
 
     private
 
+    def breakable_block(args, &block)
+      if @service.open?
+        raise CircuitBreakError
+      else
+        block.call(*args)
+      end
+    end
+
+    def retryable_block(args, &block)
+      if @retryable_options
+        Retryable.retryable(@retryable_options) do |retries, exception|
+          metrics(exception) if retries > 0
+          breakable_block(args, &block)
+        end
+      else
+        breakable_block(args, &block)
+      end
+    end
+
+    def timeout_block(args, &block)
+      if @timeout
+        Concurrent::timeout(@timeout) do
+          retryable_block(args, &block)
+        end
+      else
+        retryable_block(args, &block)
+      end
+    end
+
+    def metrics(reason)
+      case reason
+      when nil
+        @service.success
+      when TimeoutError
+        @service.timeout
+      when RejectedExecutionError
+        @service.rejection
+      when CircuitBreakError
+        @service.break
+      when DependencyError
+        @service.dependency
+      else
+        @service.failure
+      end
+    end
+
+    # timeout do
+    #   retryable do
+    #     circuit break do
+    #       block.call
+    #     end
+    #   end
+    # end
     def initial_normal(&block)
       future = RichFuture.new(executor: @service.executor) do
         args = wait_dependencies
-        if @timeout
-          Concurrent::timeout(@timeout) do
-            block.call(*args)
-          end
-        else
-          block.call(*args)
-        end
+        timeout_block(args, &block)
       end
       future.add_observer do |_, _, reason|
-        case reason
-        when nil
-          @service.success
-        when TimeoutError
-          @service.timeout
-        when RejectedExecutionError
-          @service.rejection
-        when CircuitBreakError
-          @service.break
-        when DependencyError
-          @service.dependency
-        else
-          @service.failure
-        end
+        metrics(reason)
       end
       future
     end
