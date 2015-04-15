@@ -87,10 +87,9 @@ module Expeditor
     end
 
     # `chain` returns new command that has self as dependencies
-    def chain(&block)
-      Command.new(dependencies: [self]) do |v|
-        block.call(v)
-      end
+    def chain(opts = {}, &block)
+      opts[:dependencies] = [self]
+      Command.new(opts, &block)
     end
 
     def self.const(value)

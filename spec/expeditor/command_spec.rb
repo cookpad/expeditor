@@ -498,6 +498,17 @@ describe Expeditor::Command do
         expect(command_double.get).to eq(84)
       end
     end
+
+    context 'with options' do
+      it 'should recognize options' do
+        command = simple_command(42)
+        command_sleep = command.chain(timeout: 0.01) do |n|
+          sleep 0.1
+          n * 2
+        end.start
+        expect { command_sleep.get }.to raise_error(Expeditor::TimeoutError)
+      end
+    end
   end
 
   describe '.const' do
