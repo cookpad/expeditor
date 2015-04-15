@@ -2,7 +2,7 @@ require 'concurrent/executor/thread_pool_executor'
 
 module Expeditor
   class Service
-    attr :executor
+    attr_reader :executor
 
     def initialize(opts = {})
       @executor = Concurrent::ThreadPoolExecutor.new(opts)
