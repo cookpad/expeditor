@@ -200,13 +200,18 @@ module Expeditor
           max_threads: 5,
           max_queue: 0,
         )
+        error = Concurrent::IVar.new
+        error.add_observer do |_, e, _|
+          executor.shutdown
+          current.raise(DependencyError.new(e))
+        end
         args = []
         @dependencies.each_with_index do |c, i|
           executor.post do
             begin
               args[i] = c.get
             rescue => e
-              current.raise(DependencyError.new(e))
+              error.set(e)
             end
           end
         end

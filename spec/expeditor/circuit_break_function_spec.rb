@@ -77,7 +77,7 @@ describe Expeditor::Command do
           rescue
           end
         end
-        expect(Time.now - start_time).to be_between(0.09, 0.102)
+        expect(Time.now - start_time).to be_between(0.088, 0.102)
         service.shutdown
       end
     end
@@ -113,9 +113,43 @@ describe Expeditor::Command do
           reason = e
           0
         end
-        command.wait
         expect(command.get).to eq(0)
         expect(reason).to be_instance_of(Expeditor::CircuitBreakError)
+        service.shutdown
+      end
+    end
+
+    context 'with dependency\'s error of circuit break ' do
+      it 'should not fall deadlock' do
+        service = Expeditor::Service.new(
+          executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
+          threshold: 0.2,
+          non_break_count: 10,
+          per: 1,
+          size: 10,
+        )
+        failure_commands = 20.times.map do
+          Expeditor::Command.new(service: service) do
+            raise RuntimeError
+          end.with_fallback do
+            1
+          end
+        end
+        success_commands = 80.times.map do
+          Expeditor::Command.new(service: service) do
+            1
+          end
+        end
+        command = Expeditor::Command.new(
+          service: service,
+          dependencies: failure_commands + success_commands,
+        ) do |*vs|
+          vs.inject(:+)
+        end.with_fallback do |e|
+          0
+        end
+        command.start
+        expect(command.get).to eq(0)
         service.shutdown
       end
     end
