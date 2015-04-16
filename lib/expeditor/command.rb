@@ -1,4 +1,3 @@
-require 'concurrent/utility/timeout'
 require 'concurrent/ivar'
 require 'concurrent/executor/safe_task_executor'
 require 'concurrent/configuration'
@@ -7,6 +6,7 @@ require 'expeditor/rich_future'
 require 'expeditor/service'
 require 'expeditor/services'
 require 'retryable'
+require 'timeout'
 
 module Expeditor
   class Command
@@ -149,7 +149,7 @@ module Expeditor
 
     def timeout_block(args, &block)
       if @timeout
-        Concurrent::timeout(@timeout) do
+        Timeout::timeout(@timeout) do
           retryable_block(args, &block)
         end
       else
@@ -161,7 +161,7 @@ module Expeditor
       case reason
       when nil
         @service.success
-      when TimeoutError
+      when Timeout::Error
         @service.timeout
       when RejectedExecutionError
         @service.rejection

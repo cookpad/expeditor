@@ -165,11 +165,11 @@ describe Expeditor::Command do
     end
 
     context 'with timeout' do
-      it 'should throw TimeoutError' do
+      it 'should throw Timeout::Error' do
         start = Time.now
         command = sleep_command(1, 42, timeout: 0.1)
         command.start
-        expect { command.get }.to raise_error(Expeditor::TimeoutError)
+        expect { command.get }.to raise_error(Timeout::Error)
         expect(Time.now - start).to be < 0.12
       end
     end
@@ -506,7 +506,7 @@ describe Expeditor::Command do
           sleep 0.1
           n * 2
         end.start
-        expect { command_sleep.get }.to raise_error(Expeditor::TimeoutError)
+        expect { command_sleep.get }.to raise_error(Timeout::Error)
       end
     end
   end

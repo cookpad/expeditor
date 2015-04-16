@@ -75,7 +75,7 @@ describe Expeditor::Command do
           raise RuntimeError
         end
         command.start_with_retry(tries: 100, sleep: 0.001)
-        expect { command.get }.to raise_error(Expeditor::TimeoutError)
+        expect { command.get }.to raise_error(Timeout::Error)
       end
     end
 
