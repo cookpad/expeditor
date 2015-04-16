@@ -89,5 +89,62 @@ describe Expeditor::Command do
         expect { command.get }.to raise_error(Expeditor::CircuitBreakError)
       end
     end
+
+    context 'with retry with fallback' do
+      it 'should retry if start fallback command' do
+        count = 0
+        command = Expeditor::Command.new do
+          count += 1
+          raise RuntimeError
+        end.with_fallback do
+          42
+        end
+        command.start_with_retry(tries: 10, sleep: 0)
+        expect(command.get).to eq(42)
+        expect(count).to eq(10)
+      end
+
+      it 'should retry if start normal command' do
+        count = 0
+        command = Expeditor::Command.new do
+          count += 1
+          raise RuntimeError
+        end
+        command_f = command.with_fallback do
+          42
+        end
+        command.start_with_retry(tries: 10, sleep: 0)
+        expect(command_f.get).to eq(42)
+        expect(count).to eq(10)
+      end
+    end
+
+    context 'with (1) start and (2) start_with_retry' do
+      it 'should ignore start_with_retry' do
+        count = 0
+        command = Expeditor::Command.new do
+          count += 1
+          raise RuntimeError
+        end
+        command.start
+        command.start_with_retry(tries: 10, sleep: 0)
+        command.wait
+        expect(count).to eq(1)
+      end
+    end
+
+    context 'with (1) start_with_retry and (2) start' do
+      it 'should ignore start' do
+        count = 0
+        command = Expeditor::Command.new do
+          count += 1
+          raise RuntimeError
+        end
+        command.start_with_retry(tries: 10, sleep: 0)
+        command.start
+        command.wait
+        expect(count).to eq(10)
+      end
+    end
   end
 end

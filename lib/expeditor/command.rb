@@ -16,7 +16,7 @@ module Expeditor
       @dependencies = opts.fetch(:dependencies, [])
       @normal_future = initial_normal(&block)
       @fallback_var = nil
-      @retryable_options = nil
+      @retryable_options = Concurrent::IVar.new
     end
 
     def start
@@ -29,8 +29,11 @@ module Expeditor
 
     # Equivalent to retryable gem options
     def start_with_retry(retryable_options = {})
-      @retryable_options = retryable_options
-      start
+      if not started?
+        @retryable_options.set(retryable_options)
+        start
+      end
+      self
     end
 
     def started?
@@ -134,8 +137,8 @@ module Expeditor
     end
 
     def retryable_block(args, &block)
-      if @retryable_options
-        Retryable.retryable(@retryable_options) do |retries, exception|
+      if @retryable_options.fulfilled?
+        Retryable.retryable(@retryable_options.value) do |retries, exception|
           metrics(exception) if retries > 0
           breakable_block(args, &block)
         end
