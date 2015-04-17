@@ -8,6 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = Expeditor::VERSION
   spec.authors       = ["shohei-yasutake"]
   spec.email         = ["shohei-yasutake@cookpad.com"]
+  spec.license       = "MIT"
 
   spec.summary       = "Expeditor provides asynchronous execution and fault tolerance for microservices"
   spec.description   = "Expeditor provides asynchronous execution and fault tolerance for microservices"
