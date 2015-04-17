@@ -136,11 +136,6 @@ command = Expeditor::Command.new(service: service) do
 end
 ```
 
-### timeout
-
-```ruby
-command = Expeditor
-
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
