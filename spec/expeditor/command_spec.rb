@@ -65,7 +65,7 @@ describe Expeditor::Command do
 
     context 'with double starting' do
       it 'should not throw MultipleAssignmentError' do
-        service = Expeditor::Service.new(threshold: 0, non_break_count: 0, per: 0.01, size: 10)
+        service = Expeditor::Service.new(threshold: 0, non_break_count: 10000)
         commands = 1000.times.map do
           Expeditor::Command.start(service: service) do
             raise RuntimeError
@@ -76,7 +76,6 @@ describe Expeditor::Command do
         10.times do
           commands.each(&:start)
         end
-        sleep 0.1
         command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
           vs.inject(:+)
         end

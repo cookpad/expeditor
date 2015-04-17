@@ -92,7 +92,7 @@ describe Expeditor::Command do
       it 'should be ok' do
         commands = 300.times.map do
           commands = 300.times.map do
-            sleep_command(0.001, 1)
+            simple_command(1)
           end
           command = Expeditor::Command.new(dependencies: commands) do |*vs|
             vs.inject(:+)

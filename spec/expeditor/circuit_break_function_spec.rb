@@ -4,7 +4,7 @@ describe Expeditor::Command do
   describe 'circuit break function' do
     context 'with circuit break' do
       it 'should reject execution' do
-        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_queue: 0), threshold: 0.5, non_break_count: 100, per: 1, size: 10)
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_queue: 0), threshold: 0.5, non_break_count: 100, sleep: 0, period: 10)
         commands = 100.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
@@ -47,7 +47,7 @@ describe Expeditor::Command do
 
     context 'with circuit break and wait' do
       it 'should reject execution and back' do
-        service = Expeditor::Service.new(threshold: 0.2, non_break_count: 100, per: 0.01, size: 10)
+        service = Expeditor::Service.new(threshold: 0.2, non_break_count: 100, sleep: 0, period: 0.1)
         failure_commands = 20.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
@@ -88,8 +88,8 @@ describe Expeditor::Command do
           executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
           threshold: 0.2,
           non_break_count: 10000,
-          per: 1,
-          size: 10,
+          period: 10,
+          sleep: 0,
         )
         failure_commands = 2000.times.map do
           Expeditor::Command.start(service: service) do
@@ -125,8 +125,8 @@ describe Expeditor::Command do
           executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
           threshold: 0.2,
           non_break_count: 10,
-          per: 1,
-          size: 10,
+          period: 10,
+          sleep: 0,
         )
         failure_commands = 20.times.map do
           Expeditor::Command.new(service: service) do

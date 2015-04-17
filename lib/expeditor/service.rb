@@ -6,9 +6,16 @@ module Expeditor
 
     def initialize(opts = {})
       @executor = opts.fetch(:executor) { Concurrent::ThreadPoolExecutor.new }
-      @bucket = Expeditor::Bucket.new(opts)
       @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
       @non_break_count = opts.fetch(:non_break_count, 100) # is 100 ok?
+      @sleep = opts.fetch(:sleep, 1)
+      bucket_opts = {
+        size: 10,
+        per: opts.fetch(:period, 10).to_f / 10
+      }
+      @bucket = Expeditor::Bucket.new(bucket_opts)
+      @breaking = false
+      @break_start = nil
     end
 
     def success
@@ -37,6 +44,31 @@ module Expeditor
 
     # break circuit?
     def open?
+      if @breaking
+        if Time.now - @break_start > @sleep
+          @breaking = false
+          @break_start = nil
+        else
+          return true
+        end
+      end
+      open = calc_open
+      if open
+        @breaking = true
+        @break_start = Time.now
+      end
+      open
+    end
+
+    # shutdown thread pool
+    # after shutdown, if you create thread, RejectedExecutionError is raised.
+    def shutdown
+      @executor.shutdown
+    end
+
+    private
+
+    def calc_open
       s = @bucket.total
       total_count = s.success + s.failure + s.timeout
       if total_count >= [@non_break_count, 1].max
@@ -45,12 +77,6 @@ module Expeditor
       else
         false
       end
-    end
-
-    # shutdown thread pool
-    # after shutdown, if you create thread, RejectedExecutionError is raised.
-    def shutdown
-      @executor.shutdown
     end
   end
 end
