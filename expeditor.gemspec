@@ -7,11 +7,11 @@ Gem::Specification.new do |spec|
   spec.name          = "expeditor"
   spec.version       = Expeditor::VERSION
   spec.authors       = ["shohei-yasutake"]
-  spec.email         = ["shohei-yasutake@cookpad.jp"]
+  spec.email         = ["shohei-yasutake@cookpad.com"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = "Expeditor provides asynchronous execution and fault tolerance for microservices"
+  spec.description   = "Expeditor provides asynchronous execution and fault tolerance for microservices"
+  spec.homepage      = "https://github.com/cookpad/expeditor"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = "exe"
