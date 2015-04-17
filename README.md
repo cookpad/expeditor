@@ -1,6 +1,8 @@
 # Expeditor
 
-Expeditor is a Ruby library inspired by Netflix/Hystrix.
+Expeditor is a Ruby library that provides asynchronous execution and fault tolerance for microservices.
+
+It is inspired by [Netflix/Hystrix](https://github.com/Netflix/Hystrix).
 
 ## Installation
 
@@ -30,7 +32,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/expeditor/fork )
+1. Fork it ( https://github.com/cookpad/expeditor/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
