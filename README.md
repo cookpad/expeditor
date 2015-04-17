@@ -22,7 +22,124 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### asynchronous execution
+
+```ruby
+command1 = Expeditor::Command.new do
+  ...
+end
+
+command2 = Expeditor::Command.new do
+  ...
+end
+
+command1.start # non blocking
+command2.start # non blocking
+
+command1.get   # wait until command1 execution is finished and get the result
+command2.get   # wait until command2 execution is finished and get the result
+```
+
+### asynchronous execution with dependencies
+
+```ruby
+command1 = Expeditor::Command.new do
+  ...
+end
+
+command2 = Expeditor::Command.new do
+  ...
+end
+
+command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |val1, val2|
+  ...
+end
+
+command3.start # command1 and command2 are started concurrently, execution of command3 is wait until command1 and command2 are finished.
+```
+
+### fallback
+
+```ruby
+command = Expeditor::Command.new do
+  # something that may be failed
+end
+
+# use fallback value if command is failed
+command_with_fallback = command.with_fallback do |e|
+  log(e)
+  default_value
+end
+
+command.start.get #=> error may be raised
+command_with_fallback.start.get #=> default_value if command is failed
+```
+
+### timeout
+
+```ruby
+command = Expeditor::Command.new(timeout: 1) do
+  ...
+end
+
+command.start
+command.get #=> Timeout::Error is raised if execution is timed out
+```
+
+### retry
+
+```ruby
+command = Expeditor::Command.new do
+  ...
+end
+
+# the option is completely same as retryable gem
+command.start_with_retry(
+  tries: 3,
+  sleep: 1,
+  on: [StandardError],
+)
+```
+
+### using thread pool
+
+Expeditor use [concurrent-ruby](https://github.com/ruby-concurrency/concurrent-ruby/)'s executors as thread pool.
+
+```ruby
+require 'concurrent'
+
+service = Expeditor::Service.new(
+  executor: Concurrent::ThreadPoolExecutor.new(
+    min_threads: 0,
+    max_threads: 5,
+    max_queue: 100,
+  )
+)
+
+command = Expeditor::Command.new(service: service) do
+  ...
+end
+```
+
+### circuit breaker
+
+```ruby
+service = Expeditor::Service.new(
+  period: 10,          # retention period of the service metrics (success, failure, timeout, ...)
+  sleep: 1,            # if once the circuit is opened, the circuit is still open until sleep time is passed even though failure rate is less than threshold
+  threshold: 0.5,      # if the failure rate is more than or equal to threshold, the circuit is opened
+  non_break_count: 100 # if the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold
+)
+
+command = Expeditor::Command.new(service: service) do
+  ...
+end
+```
+
+### timeout
+
+```ruby
+command = Expeditor
 
 ## Development
 
