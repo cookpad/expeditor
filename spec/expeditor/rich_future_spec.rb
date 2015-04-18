@@ -238,16 +238,17 @@ describe Expeditor::RichFuture do
     context 'with thread pool overflow' do
       it 'should not throw RejectedExecutionError' do
         executor = Concurrent::ThreadPoolExecutor.new(
-          min_threads: 10,
-          max_threads: 10,
-          max_queue: 50,
+          min_threads: 1,
+          max_threads: 1,
+          max_queue: 1,
         )
-        futures = 1000.times.map do
+        futures = 10.times.map do
           Expeditor::RichFuture.new(executor: executor) do
+            sleep 1
             42
           end
         end
-        futures.each(&:safe_execute)
+        expect { futures.each(&:safe_execute) }.to_not raise_error
         futures.each(&:wait)
         expect(futures.first.get).to eq(42)
         expect { futures.last.get }.to raise_error(Expeditor::RejectedExecutionError)
