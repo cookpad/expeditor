@@ -22,6 +22,8 @@ describe Expeditor::Command do
     end
   end
 
+  let(:error_in_command) { Class.new(StandardError) }
+
   describe '#start' do
     context 'with normal' do
       it 'should not block' do
@@ -68,7 +70,7 @@ describe Expeditor::Command do
         service = Expeditor::Service.new(threshold: 0, non_break_count: 10000)
         commands = 1000.times.map do
           Expeditor::Command.start(service: service) do
-            raise RuntimeError
+            raise error_in_command
           end.with_fallback do
             1
           end
@@ -144,15 +146,16 @@ describe Expeditor::Command do
 
     context 'with failure' do
       it 'should throw exception' do
-        command = error_command(RuntimeError, nil)
+        command = error_command(error_in_command, nil)
         command.start
-        expect { command.get }.to raise_error(RuntimeError)
+        expect { command.get }.to raise_error(error_in_command)
       end
 
       it 'should throw exception (no deadlock)' do
-        command = error_command(Exception, nil)
+        error = Class.new(Exception)
+        command = error_command(error, nil)
         command.start
-        expect { command.get }.to raise_error(Exception)
+        expect { command.get }.to raise_error(error)
       end
     end
 
@@ -185,7 +188,7 @@ describe Expeditor::Command do
     end
 
     it 'should not block' do
-      command = error_command(RuntimeError, nil)
+      command = error_command(error_in_command, nil)
       command.start
       command.wait
       start_time = Time.now
@@ -222,7 +225,7 @@ describe Expeditor::Command do
         start_time = Time.now
         command = Expeditor::Command.new do
           sleep 0.1
-          raise RuntimeError
+          raise error_in_command
         end
         command_with_f = command.with_fallback do
           sleep 0.1
@@ -297,7 +300,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and without fallback' do
       it 'should run callback with failure' do
-        command = error_command(RuntimeError, 42)
+        command = error_command(error_in_command, 42)
         success = nil
         value = nil
         reason = nil
@@ -309,13 +312,13 @@ describe Expeditor::Command do
         command.start.wait
         expect(success).to be false
         expect(value).to be_nil
-        expect(reason).to be_instance_of(RuntimeError)
+        expect(reason).to be_instance_of(error_in_command)
       end
     end
 
     context 'with normal failure and with fallback success' do
       it 'should run callback with success' do
-        command = error_command(RuntimeError, 42).with_fallback { 0 }
+        command = error_command(error_in_command, 42).with_fallback { 0 }
         success = nil
         value = nil
         reason = nil
@@ -333,7 +336,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should run callback with failure' do
-        command = error_command(RuntimeError, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).with_fallback do |e|
           raise e
         end
         success = nil
@@ -347,7 +350,7 @@ describe Expeditor::Command do
         command.start.wait
         expect(success).to be false
         expect(value).to be_nil
-        expect(reason).to be_instance_of(RuntimeError)
+        expect(reason).to be_instance_of(error_in_command)
       end
     end
   end
@@ -379,7 +382,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and without fallback' do
       it 'should not run callback' do
-        command = error_command(RuntimeError, 42)
+        command = error_command(error_in_command, 42)
         res = nil
         command.on_success do |v|
           res = v
@@ -391,7 +394,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback success' do
       it 'should run callback' do
-        command = error_command(RuntimeError, 42).with_fallback do
+        command = error_command(error_in_command, 42).with_fallback do
           0
         end
         res = nil
@@ -405,7 +408,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should not run callback' do
-        command = error_command(RuntimeError, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).with_fallback do |e|
           raise e
         end
         res = nil
@@ -433,7 +436,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and without fallback' do
       it 'should run callback' do
-        command = error_command(RuntimeError, 42)
+        command = error_command(error_in_command, 42)
         flag = false
         command.on_failure do |e|
           flag = true
@@ -459,7 +462,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback success' do
       it 'should not run callback' do
-        command = error_command(RuntimeError, 42).with_fallback do
+        command = error_command(error_in_command, 42).with_fallback do
           0
         end
         flag = false
@@ -473,7 +476,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should run callback' do
-        command = error_command(RuntimeError, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).with_fallback do |e|
           raise e
         end
         flag = false

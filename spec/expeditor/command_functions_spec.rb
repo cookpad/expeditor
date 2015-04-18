@@ -22,6 +22,8 @@ describe Expeditor::Command do
     end
   end
 
+  let(:error_in_command) { Class.new(StandardError) }
+
   describe 'dependencies function' do
     context 'with normal and no sleep' do
       it 'should be ok' do
@@ -52,7 +54,7 @@ describe Expeditor::Command do
     context 'with failure' do
       it 'should throw error DependencyError' do
         command1 = simple_command(42)
-        command2 = error_command(RuntimeError, 42)
+        command2 = error_command(error_in_command, 42)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
@@ -65,7 +67,7 @@ describe Expeditor::Command do
       it 'should throw error immediately' do
         start = Time.now
         command1 = sleep_command(0.1, 42)
-        command2 = error_command(RuntimeError, 100)
+        command2 = error_command(error_in_command, 100)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
@@ -132,19 +134,21 @@ describe Expeditor::Command do
 
     context 'with failure of normal' do
       it 'should be fallback value' do
-        command = error_command(RuntimeError, 42).with_fallback { 0 }
+        command = error_command(error_in_command, 42).with_fallback { 0 }
         command.start
         expect(command.get).to eq(0)
       end
     end
 
     context 'with fail both' do
+      let(:error_in_fallback) { Class.new(Exception) }
+
       it 'should throw fallback error' do
-        command = error_command(RuntimeError, 42).with_fallback do
-          raise Exception
+        command = error_command(error_in_command, 42).with_fallback do
+          raise error_in_fallback
         end
         command.start
-        expect { command.get }.to raise_error(Exception)
+        expect { command.get }.to raise_error(error_in_fallback)
       end
     end
 
@@ -153,7 +157,7 @@ describe Expeditor::Command do
         service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 10, min_threads: 10, max_queue: 100))
         commands = 1000.times.map do
           Expeditor::Command.new(service: service) do
-            raise RuntimeError
+            raise error_in_command
           end.with_fallback do |e|
             1
           end
