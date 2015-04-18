@@ -91,8 +91,8 @@ describe Expeditor::RichFuture do
     end
   end
 
-  describe '#safe_fail' do
-    it 'should fail immediately' do
+  describe '#safe_set' do
+    it 'should set immediately' do
       future = Expeditor::RichFuture.new do
         sleep 1000
         raise RuntimeError
