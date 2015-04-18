@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe Expeditor::RichFuture do
+  let(:error_in_future) { Class.new(StandardError) }
+
   describe '#get' do
     context 'with success' do
       it 'should return normal value' do
@@ -15,10 +17,10 @@ describe Expeditor::RichFuture do
     context 'with failure' do
       it 'should raise exception' do
         future = Expeditor::RichFuture.new do
-          raise RuntimeError
+          raise error_in_future
         end
         future.execute
-        expect { future.get }.to raise_error(RuntimeError)
+        expect { future.get }.to raise_error(error_in_future)
       end
     end
   end
@@ -37,7 +39,7 @@ describe Expeditor::RichFuture do
     context 'with recover' do
       it 'should raise exception' do
         future = Expeditor::RichFuture.new do
-          raise RuntimeError
+          raise error_in_future
         end
         future.execute
         expect(future.get_or_else { 0 }).to eq(0)
@@ -45,12 +47,14 @@ describe Expeditor::RichFuture do
     end
 
     context 'with also failure' do
+      let(:error_in_fallback) { Class.new(StandardError) }
+
       it 'should raise exception' do
         future = Expeditor::RichFuture.new do
-          raise RuntimeError
+          raise error_in_future
         end
         future.execute
-        expect { future.get_or_else { raise Exception } }.to raise_error(Exception)
+        expect { future.get_or_else { raise error_in_fallback } }.to raise_error(error_in_fallback)
       end
     end
   end
@@ -59,7 +63,7 @@ describe Expeditor::RichFuture do
     it 'should success immediately' do
       future = Expeditor::RichFuture.new do
         sleep 1000
-        raise RuntimeError
+        raise error_in_future
       end
       future.execute
       future.set(42)
@@ -71,7 +75,7 @@ describe Expeditor::RichFuture do
     it 'should notify to observer' do
       future = Expeditor::RichFuture.new do
         sleep 1000
-        raise RuntimeError
+        raise error_in_future
       end
       value = nil
       future.add_observer do |_, v, _|
@@ -95,7 +99,7 @@ describe Expeditor::RichFuture do
     it 'should set immediately' do
       future = Expeditor::RichFuture.new do
         sleep 1000
-        raise RuntimeError
+        raise error_in_future
       end
       future.execute
       future.safe_set(42)
@@ -131,10 +135,10 @@ describe Expeditor::RichFuture do
         42
       end
       future.execute
-      future.fail(Exception.new)
+      future.fail(error_in_future.new)
       expect(future.completed?).to be true
       expect(future.rejected?).to be true
-      expect(future.reason).to be_instance_of(Exception)
+      expect(future.reason).to be_instance_of(error_in_future)
     end
 
     it 'should notify to observer' do
@@ -146,8 +150,8 @@ describe Expeditor::RichFuture do
       future.add_observer do |_, _, r|
         reason = r
       end
-      future.fail(RuntimeError.new)
-      expect(reason).to be_instance_of(RuntimeError)
+      future.fail(error_in_future.new)
+      expect(reason).to be_instance_of(error_in_future)
     end
 
     it 'should throw error if it is already completed' do
@@ -156,7 +160,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.wait
-      expect { future.fail(RuntimeError.new) }.to raise_error(Concurrent::MultipleAssignmentError)
+      expect { future.fail(error_in_future.new) }.to raise_error(Concurrent::MultipleAssignmentError)
     end
   end
 
@@ -167,10 +171,10 @@ describe Expeditor::RichFuture do
         42
       end
       future.execute
-      future.safe_fail(Exception.new)
+      future.safe_fail(error_in_future.new)
       expect(future.completed?).to be true
       expect(future.rejected?).to be true
-      expect(future.reason).to be_instance_of(Exception)
+      expect(future.reason).to be_instance_of(error_in_future)
     end
 
     it 'should not throw error although it is already completed' do
@@ -179,7 +183,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.wait
-      future.safe_fail(RuntimeError.new)
+      future.safe_fail(error_in_future.new)
     end
 
     it 'should ignore if it is already completed' do
@@ -188,7 +192,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.wait
-      future.safe_fail(RuntimeError.new)
+      future.safe_fail(error_in_future.new)
       expect(future.value).to eq(42)
     end
   end
