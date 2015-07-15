@@ -19,10 +19,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com' to prevent pushes to rubygems.org, or delete to allow pushes to any server."
-  end
-
   spec.add_runtime_dependency "concurrent-ruby", "0.8.0"
   spec.add_runtime_dependency "concurrent-ruby-ext", "0.8.0"
   spec.add_runtime_dependency "retryable", "> 1.0"
