@@ -227,7 +227,7 @@ describe Expeditor::RichFuture do
           max_queue: 1,
         )
         futures = 3.times.map do
-          future1 = Expeditor::RichFuture.new(executor: executor) do
+          Expeditor::RichFuture.new(executor: executor) do
             42
           end
         end
