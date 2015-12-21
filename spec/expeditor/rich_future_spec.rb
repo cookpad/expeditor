@@ -226,14 +226,25 @@ describe Expeditor::RichFuture do
           max_threads: 1,
           max_queue: 1,
         )
+        mutex = Mutex.new
         future1 = Expeditor::RichFuture.new(executor: executor) do
-          42
+          begin
+            mutex.lock
+            42
+          ensure
+            mutex.unlock
+          end
         end
         future2 = Expeditor::RichFuture.new(executor: executor) do
           42
         end
+        future3 = Expeditor::RichFuture.new(executor: executor) do
+          42
+        end
+        mutex.lock
         future1.execute
-        expect { future2.execute }.to raise_error(Expeditor::RejectedExecutionError)
+        future2.execute
+        expect { future3.execute }.to raise_error(Expeditor::RejectedExecutionError)
       end
     end
   end
