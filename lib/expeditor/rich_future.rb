@@ -22,7 +22,7 @@ module Expeditor
     end
 
     def set(v)
-      super(v)
+      complete(true, v, nil)
     end
 
     def safe_set(v)
