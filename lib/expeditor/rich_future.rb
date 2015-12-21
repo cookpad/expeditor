@@ -41,11 +41,15 @@ module Expeditor
       not unscheduled?
     end
 
-    def safe_execute
-      begin
-        execute
-      rescue Exception => e
-        fail(e)
+    def safe_execute(*args)
+      if args.empty?
+        begin
+          execute
+        rescue Exception => e
+          fail(e)
+        end
+      else
+        super(*args)
       end
     end
   end
