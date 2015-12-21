@@ -22,7 +22,7 @@ module Expeditor
     end
 
     def set(v)
-      super(v)
+      complete(true, v, nil)
     end
 
     def safe_set(v)
@@ -41,21 +41,16 @@ module Expeditor
       not unscheduled?
     end
 
-    def safe_execute
-      begin
-        execute
-      rescue Exception => e
-        fail(e)
+    def safe_execute(*args)
+      if args.empty?
+        begin
+          execute
+        rescue Exception => e
+          fail(e)
+        end
+      else
+        super(*args)
       end
-    end
-
-    private
-
-    # This is workaround for concurrent-ruby's deadlock bug
-    # see: ruby-concurrency/concurrent-ruby#275
-    def work
-      success, val, reason = Concurrent::SafeTaskExecutor.new(@task, rescue_exception: true).execute(*@args)
-      complete(success, val, reason)
     end
   end
 end

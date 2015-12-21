@@ -115,13 +115,13 @@ module Expeditor
       @fallback_var = Concurrent::IVar.new
       @normal_future.add_observer do |_, value, reason|
         if reason != nil
-          future = RichFuture.new(executor: Concurrent.configuration.global_task_pool) do
+          future = RichFuture.new(executor: Concurrent.global_io_executor) do
             success, val, reason = Concurrent::SafeTaskExecutor.new(block, rescue_exception: true).execute(reason)
-            @fallback_var.complete(success, val, reason)
+            @fallback_var.send(:complete, success, val, reason)
           end
           future.safe_execute
         else
-          @fallback_var.complete(true, value, nil)
+          @fallback_var.send(:complete, true, value, nil)
         end
       end
     end
