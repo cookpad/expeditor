@@ -5,7 +5,7 @@ module Expeditor
   module Services
     class Default < Expeditor::Service
       def initialize
-        @executor = Concurrent.configuration.global_task_pool
+        @executor = Concurrent.global_io_executor
         @bucket = nil
       end
 
