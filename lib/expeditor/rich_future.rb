@@ -48,14 +48,5 @@ module Expeditor
         fail(e)
       end
     end
-
-    private
-
-    # This is workaround for concurrent-ruby's deadlock bug
-    # see: ruby-concurrency/concurrent-ruby#275
-    def work
-      success, val, reason = Concurrent::SafeTaskExecutor.new(@task, rescue_exception: true).execute(*@args)
-      complete(success, val, reason)
-    end
   end
 end
