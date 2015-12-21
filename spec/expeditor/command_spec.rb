@@ -55,11 +55,12 @@ describe Expeditor::Command do
     context 'with thread pool overflow' do
       it 'should throw RejectedExecutionError in #get, not #start' do
         service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 1, min_threads: 1, max_queue: 1))
-        commands = 3.times.map do |i|
-          simple_command(i, service: service)
-        end
-        commands.map(&:start)
-        expect { commands.each(&:get) }.to raise_error(Expeditor::RejectedExecutionError)
+        command1 = simple_command(1, service: service)
+        command2 = simple_command(2, service: service)
+        command1.start
+        command2.start
+        expect(command1.get).to eq(1)
+        expect { command2.get }.to raise_error(Expeditor::RejectedExecutionError)
         service.shutdown
       end
     end
