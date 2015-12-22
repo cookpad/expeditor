@@ -67,7 +67,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.set(42)
-      expect(future.completed?).to be true
+      expect(future.complete?).to be true
       expect(future.fulfilled?).to be true
       expect(future.get).to eq(42)
     end
@@ -103,7 +103,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.safe_set(42)
-      expect(future.completed?).to be true
+      expect(future.complete?).to be true
       expect(future.fulfilled?).to be true
       expect(future.get).to eq(42)
     end
@@ -136,7 +136,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.fail(error_in_future.new)
-      expect(future.completed?).to be true
+      expect(future.complete?).to be true
       expect(future.rejected?).to be true
       expect(future.reason).to be_instance_of(error_in_future)
     end
@@ -172,7 +172,7 @@ describe Expeditor::RichFuture do
       end
       future.execute
       future.safe_fail(error_in_future.new)
-      expect(future.completed?).to be true
+      expect(future.complete?).to be true
       expect(future.rejected?).to be true
       expect(future.reason).to be_instance_of(error_in_future)
     end

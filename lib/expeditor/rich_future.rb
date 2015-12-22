@@ -26,7 +26,7 @@ module Expeditor
     end
 
     def safe_set(v)
-      set(v) unless completed?
+      set(v) unless complete?
     end
 
     def fail(e)
@@ -34,7 +34,7 @@ module Expeditor
     end
 
     def safe_fail(e)
-      fail(e) unless completed?
+      fail(e) unless complete?
     end
 
     def executed?
