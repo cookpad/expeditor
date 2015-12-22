@@ -92,11 +92,11 @@ describe Expeditor::Command do
 
     context 'with large number of horizontal dependencies ^ 2 (long test case)' do
       it 'should be ok' do
-        commands = 300.times.map do
-          commands = 300.times.map do
+        commands = 100.times.map do
+          dependencies = 100.times.map do
             simple_command(1)
           end
-          command = Expeditor::Command.new(dependencies: commands) do |*vs|
+          Expeditor::Command.new(dependencies: dependencies) do |*vs|
             vs.inject(:+)
           end
         end
@@ -105,7 +105,7 @@ describe Expeditor::Command do
         end
         start = Time.now
         command.start
-        expect(command.get).to eq(90000)
+        expect(command.get).to eq(10000)
       end
     end
 
