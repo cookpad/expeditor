@@ -66,6 +66,10 @@ module Expeditor
       @executor.shutdown
     end
 
+    def current_status
+      @bucket.current
+    end
+
     private
 
     def calc_open
