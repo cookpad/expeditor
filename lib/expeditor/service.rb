@@ -9,11 +9,11 @@ module Expeditor
       @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
       @non_break_count = opts.fetch(:non_break_count, 100) # is 100 ok?
       @sleep = opts.fetch(:sleep, 1)
-      bucket_opts = {
+      @bucket_opts = {
         size: 10,
         per: opts.fetch(:period, 10).to_f / 10
       }
-      @bucket = Expeditor::Bucket.new(bucket_opts)
+      @bucket = Expeditor::Bucket.new(@bucket_opts)
       @breaking = false
       @break_start = nil
     end
@@ -68,6 +68,12 @@ module Expeditor
 
     def current_status
       @bucket.current
+    end
+
+    def reset_status!
+      @bucket = Expeditor::Bucket.new(@bucket_opts)
+      @breaking = false
+      @break_start = nil
     end
 
     private
