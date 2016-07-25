@@ -13,9 +13,7 @@ module Expeditor
         size: 10,
         per: opts.fetch(:period, 10).to_f / 10
       }
-      @bucket = Expeditor::Bucket.new(@bucket_opts)
-      @breaking = false
-      @break_start = nil
+      reset_status!
     end
 
     def success
