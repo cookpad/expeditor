@@ -77,6 +77,8 @@ command.start.get #=> error may be raised
 command_with_fallback.start.get #=> default_value if command is failed
 ```
 
+If you set `false` to `Expeditor::Service#fallback_enabled`, fallbacks do not occur. It is useful in test codes.
+
 ### timeout
 
 ```ruby
@@ -121,6 +123,11 @@ service = Expeditor::Service.new(
 command = Expeditor::Command.new(service: service) do
   ...
 end
+
+service.current_status
+# => #<Expeditor::Status:0x007fdeeeb18468 @break=0, @dependency=0, @failure=0, @rejection=0, @success=0, @timeout=0>
+
+service.reset_status!  # reset status in the service
 ```
 
 ### circuit breaker
