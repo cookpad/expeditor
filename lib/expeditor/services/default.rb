@@ -7,6 +7,7 @@ module Expeditor
       def initialize
         @executor = Concurrent.global_io_executor
         @bucket = nil
+        @fallback_enabled = true
       end
 
       def success
