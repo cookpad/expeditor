@@ -43,7 +43,7 @@ module Expeditor
     def get
       raise NotStartedError if not started?
       @normal_future.get_or_else do
-        if @fallback_var
+        if @fallback_var && @service.fallback_enabled?
           @fallback_var.wait
           if @fallback_var.rejected?
             raise @fallback_var.reason
