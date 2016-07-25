@@ -101,4 +101,17 @@ describe Expeditor::Service do
       expect(status.failure).to eq(3)
     end
   end
+
+  describe '#reset_status!' do
+    let(:service) { Expeditor::Service.new(non_break_count: 1) }
+
+    it "resets the service's status" do
+      2.times do
+        service.failure
+      end
+      expect(service.open?).to be(true)
+      service.reset_status!
+      expect(service.open?).to be(false)
+    end
+  end
 end
