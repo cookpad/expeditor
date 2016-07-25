@@ -139,11 +139,13 @@ describe Expeditor::Service do
       end
 
       it 'does not call fallback and raises error' do
-        expect { Expeditor::Command.new(service: service) {
-          raise 'error!'
-        }.with_fallback {
-          0
-        }.start.get }.to raise_error(RuntimeError, 'error!')
+        expect {
+          Expeditor::Command.new(service: service) {
+            raise 'error!'
+          }.with_fallback {
+            0
+          }.start.get
+        }.to raise_error(RuntimeError, 'error!')
       end
     end
   end
