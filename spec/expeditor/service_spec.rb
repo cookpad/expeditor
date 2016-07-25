@@ -87,4 +87,18 @@ describe Expeditor::Service do
       expect(command.get).to eq(100)
     end
   end
+
+  describe '#current_status' do
+    let(:service) { Expeditor::Service.new(sleep: 10) }
+    it 'returns current status' do
+      3.times do
+        Expeditor::Command.new(service: service) {
+          raise
+        }.with_fallback { nil }.start.get
+      end
+      status = service.current_status
+      expect(status.success).to eq(0)
+      expect(status.failure).to eq(3)
+    end
+  end
 end
