@@ -3,6 +3,7 @@ require 'concurrent/executor/thread_pool_executor'
 module Expeditor
   class Service
     attr_reader :executor
+    attr_accessor :fallback_enabled
 
     def initialize(opts = {})
       @executor = opts.fetch(:executor) { Concurrent::ThreadPoolExecutor.new }
@@ -14,6 +15,7 @@ module Expeditor
         per: opts.fetch(:period, 10).to_f / 10
       }
       reset_status!
+      @fallback_enabled = true
     end
 
     def success
@@ -38,6 +40,10 @@ module Expeditor
 
     def dependency
       @bucket.increment :dependency
+    end
+
+    def fallback_enabled?
+      !!fallback_enabled
     end
 
     # break circuit?

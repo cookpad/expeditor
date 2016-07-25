@@ -114,4 +114,39 @@ describe Expeditor::Service do
       expect(service.open?).to be(false)
     end
   end
+
+  describe '#fallback_enabled' do
+    let(:service) { Expeditor::Service.new(sleep: 10) }
+
+    context 'fallback_enabled is true' do
+      before do
+        service.fallback_enabled = true
+      end
+
+      it 'returns fallback value' do
+        result = Expeditor::Command.new(service: service) {
+          raise 'error!'
+        }.with_fallback {
+          0
+        }.start.get
+        expect(result).to eq(0)
+      end
+    end
+
+    context 'fallback_enabled is false' do
+      before do
+        service.fallback_enabled = false
+      end
+
+      it 'does not call fallback and raises error' do
+        expect {
+          Expeditor::Command.new(service: service) {
+            raise 'error!'
+          }.with_fallback {
+            0
+          }.start.get
+        }.to raise_error(RuntimeError, 'error!')
+      end
+    end
+  end
 end
