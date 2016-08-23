@@ -14,14 +14,26 @@ module Expeditor
       @service = opts.fetch(:service, Expeditor::Services.default)
       @timeout = opts[:timeout]
       @dependencies = opts.fetch(:dependencies, [])
-      @normal_future = initial_normal(&block)
-      @fallback_var = nil
+
+      @normal_future = nil
       @retryable_options = Concurrent::IVar.new
+      @normal_block = block
+      @fallback_block = nil
+      @ivar = Concurrent::IVar.new
     end
 
     def start
       if not started?
-        @dependencies.each(&:start)
+        prepare
+        @normal_future.safe_execute
+      end
+      self
+    end
+
+    # run is similar to the `start`, but the method is executed on the current thread.
+    def run
+      if not started?
+        prepare(Concurrent::ImmediateExecutor.new)
         @normal_future.safe_execute
       end
       self
@@ -37,18 +49,18 @@ module Expeditor
     end
 
     def started?
-      @normal_future.executed?
+      !!@normal_future && @normal_future.executed?
     end
 
     def get
       raise NotStartedError if not started?
       @normal_future.get_or_else do
-        if @fallback_var && @service.fallback_enabled?
-          @fallback_var.wait
-          if @fallback_var.rejected?
-            raise @fallback_var.reason
+        if @fallback_block && @service.fallback_enabled?
+          @ivar.wait
+          if @ivar.rejected?
+            raise @ivar.reason
           else
-            @fallback_var.value
+            @ivar.value
           end
         else
           raise @normal_future.reason
@@ -71,8 +83,7 @@ module Expeditor
 
     def wait
       raise NotStartedError if not started?
-      @normal_future.wait
-      @fallback_var.wait if @fallback_var && @service.fallback_enabled?
+      @ivar.wait
     end
 
     # command.on_complete do |success, value, reason|
@@ -119,18 +130,7 @@ module Expeditor
     private
 
     def reset_fallback(&block)
-      @fallback_var = Concurrent::IVar.new
-      @normal_future.add_observer do |_, value, reason|
-        if reason != nil
-          future = RichFuture.new(executor: Concurrent.global_io_executor) do
-            success, val, reason = Concurrent::SafeTaskExecutor.new(block, rescue_exception: true).execute(reason)
-            @fallback_var.send(:complete, success, val, reason)
-          end
-          future.safe_execute
-        else
-          @fallback_var.send(:complete, true, value, nil)
-        end
-      end
+      @fallback_block = block
     end
 
     def breakable_block(args, &block)
@@ -186,8 +186,8 @@ module Expeditor
     #     end
     #   end
     # end
-    def initial_normal(&block)
-      future = RichFuture.new(executor: @service.executor) do
+    def initial_normal(executor, &block)
+      future = RichFuture.new(executor: executor) do
         args = wait_dependencies
         timeout_block(args, &block)
       end
@@ -229,18 +229,37 @@ module Expeditor
     end
 
     def on(&callback)
-      if @fallback_var
-        @fallback_var.add_observer(&callback)
-      else
-        @normal_future.add_observer(&callback)
+      @ivar.add_observer(&callback)
+    end
+
+    # set future
+    # set fallback future as an observer
+    # start dependencies
+    def prepare(executor = @service.executor)
+      @normal_future = initial_normal(executor, &@normal_block)
+      @normal_future.add_observer do |_, value, reason|
+        if reason # failure
+          if @fallback_block
+            future = RichFuture.new(executor: executor) do
+              success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
+              @ivar.send(:complete, success, value, reason)
+            end
+            future.safe_execute
+          else
+            @ivar.fail(reason)
+          end
+        else # success
+          @ivar.set(value)
+        end
       end
+
+      @dependencies.each(&:start)
     end
 
     class ConstCommand < Command
       def initialize(value)
-        @service = Expeditor::Services.default
-        @dependencies = []
-        @normal_future = RichFuture.new {}.set(value)
+        super(){ value }
+        self.start
       end
     end
   end

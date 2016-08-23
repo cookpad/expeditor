@@ -133,7 +133,7 @@ describe Expeditor::Command do
     context 'with large number of commands' do
       it 'should not throw any errors' do
         service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 10, min_threads: 10, max_queue: 100))
-        commands = 1000.times.map do
+        commands = 100.times.map do
           Expeditor::Command.new(service: service) do
             raise error_in_command
           end.set_fallback do |e|
@@ -142,7 +142,7 @@ describe Expeditor::Command do
         end
         commands.each(&:start)
         sum = commands.map(&:get).inject(:+)
-        expect(sum).to eq(1000)
+        expect(sum).to eq(100)
         service.shutdown
       end
     end
