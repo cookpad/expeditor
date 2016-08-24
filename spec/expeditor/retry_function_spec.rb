@@ -96,7 +96,7 @@ describe Expeditor::Command do
         command = Expeditor::Command.new do
           count += 1
           raise RuntimeError
-        end.with_fallback do
+        end.set_fallback do
           42
         end
         command.start_with_retry(tries: 10, sleep: 0)
@@ -110,7 +110,7 @@ describe Expeditor::Command do
           count += 1
           raise RuntimeError
         end
-        command_f = command.with_fallback do
+        command_f = command.set_fallback do
           42
         end
         command.start_with_retry(tries: 10, sleep: 0)

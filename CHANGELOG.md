@@ -1,3 +1,7 @@
+## Master (unreleased)
+
+- Deprecate Expeditor::Command#with_fallback. Use `set_fallback` instead [#14](https://github.com/cookpad/expeditor/pull/14)
+
 ## 0.4.0
 - Add Expeditor::Service#current\_status [#9](https://github.com/cookpad/expeditor/issues/9)
 - Add Expeditor::Service#reset\_status! [#10](https://github.com/cookpad/expeditor/issues/10)

@@ -68,7 +68,7 @@ command = Expeditor::Command.new do
 end
 
 # use fallback value if command is failed
-command_with_fallback = command.with_fallback do |e|
+command_with_fallback = command.set_fallback do |e|
   log(e)
   default_value
 end

@@ -8,7 +8,7 @@ describe Expeditor::Command do
         commands = 100.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
-          end.with_fallback do |e|
+          end.set_fallback do |e|
             if e === Expeditor::CircuitBreakError
               1
             else
@@ -94,7 +94,7 @@ describe Expeditor::Command do
         failure_commands = 2000.times.map do
           Expeditor::Command.start(service: service) do
             raise RuntimeError
-          end.with_fallback do
+          end.set_fallback do
             1
           end
         end
@@ -109,7 +109,7 @@ describe Expeditor::Command do
           dependencies: failure_commands + success_commands,
         ) do |*vs|
           vs.inject(:+)
-        end.with_fallback do |e|
+        end.set_fallback do |e|
           reason = e
           0
         end
@@ -131,7 +131,7 @@ describe Expeditor::Command do
         failure_commands = 20.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
-          end.with_fallback do
+          end.set_fallback do
             1
           end
         end
@@ -145,7 +145,7 @@ describe Expeditor::Command do
           dependencies: failure_commands + success_commands,
         ) do |*vs|
           vs.inject(:+)
-        end.with_fallback do |e|
+        end.set_fallback do |e|
           0
         end
         command.start
