@@ -57,9 +57,8 @@ module Expeditor
     end
 
     def with_fallback(&block)
-      command = self.clone
-      command.reset_fallback(&block)
-      command
+      reset_fallback(&block)
+      self
     end
 
     def wait
@@ -109,7 +108,7 @@ module Expeditor
       Command.new(opts, &block).start
     end
 
-    protected
+    private
 
     def reset_fallback(&block)
       @fallback_var = Concurrent::IVar.new
@@ -125,8 +124,6 @@ module Expeditor
         end
       end
     end
-
-    private
 
     def breakable_block(args, &block)
       if @service.open?

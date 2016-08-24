@@ -198,7 +198,7 @@ describe Expeditor::Command do
       fallback_command = command.with_fallback do
         0
       end
-      expect(fallback_command).not_to eq(command)
+      expect(fallback_command).to eq(command)
       # expect(fallback_command.normal_future).to eq(command.normal_future)
     end
 
@@ -238,18 +238,14 @@ describe Expeditor::Command do
     context 'with fallback' do
       it 'should wait execution' do
         start_time = Time.now
-        command = Expeditor::Command.new do
+        command = Expeditor::Command.new {
           sleep 0.1
           raise error_in_command
-        end
-        command_with_f = command.with_fallback do
+        }.with_fallback {
           sleep 0.1
           42
-        end
-        command_with_f.start
-        command.wait
-        expect(Time.now - start_time).to be_between(0.1, 0.11).inclusive
-        command_with_f.wait
+        }
+        command.start.wait
         expect(Time.now - start_time).to be_between(0.2, 0.22).inclusive
       end
     end
