@@ -24,7 +24,7 @@ command2 = Expeditor::Command.new(service: service, timeout: 0.5) do
   'command2'
 end
 # command2_d is command2 with fallback
-command2_d = command2.with_fallback do |e|
+command2_d = command2.set_fallback do |e|
   'command2 fallback'
 end
 
@@ -44,7 +44,7 @@ command4 = Expeditor::Command.new(
   sleep 0.3
   v2 + ', ' + v3
 end
-command4_d = command4.with_fallback do
+command4_d = command4.set_fallback do
   'command4 fallback'
 end
 

@@ -126,7 +126,7 @@ describe Expeditor::Command do
   describe 'fallback function' do
     context 'with normal' do
       it 'should be normal value' do
-        command = simple_command(42).with_fallback { 0 }
+        command = simple_command(42).set_fallback { 0 }
         command.start
         expect(command.get).to eq(42)
       end
@@ -134,7 +134,7 @@ describe Expeditor::Command do
 
     context 'with failure of normal' do
       it 'should be fallback value' do
-        command = error_command(error_in_command, 42).with_fallback { 0 }
+        command = error_command(error_in_command, 42).set_fallback { 0 }
         command.start
         expect(command.get).to eq(0)
       end
@@ -144,7 +144,7 @@ describe Expeditor::Command do
       let(:error_in_fallback) { Class.new(Exception) }
 
       it 'should throw fallback error' do
-        command = error_command(error_in_command, 42).with_fallback do
+        command = error_command(error_in_command, 42).set_fallback do
           raise error_in_fallback
         end
         command.start
@@ -158,7 +158,7 @@ describe Expeditor::Command do
         commands = 1000.times.map do
           Expeditor::Command.new(service: service) do
             raise error_in_command
-          end.with_fallback do |e|
+          end.set_fallback do |e|
             1
           end
         end
@@ -175,7 +175,7 @@ describe Expeditor::Command do
       it 'should be ok' do
         command1 = sleep_command(0.1, 1)
         command2 = sleep_command(1000, 'timeout!', timeout: 0.5)
-        fallback_command2 = command2.with_fallback do |e|
+        fallback_command2 = command2.set_fallback do |e|
           2
         end
         command3 = Expeditor::Command.new(dependencies: [command1, fallback_command2]) do |v1, v2|
@@ -186,7 +186,7 @@ describe Expeditor::Command do
           sleep 0.3
           v2 + v3 + 8
         end
-        fallback_command4 = command4.with_fallback do
+        fallback_command4 = command4.set_fallback do
           8
         end
 

@@ -94,7 +94,7 @@ describe Expeditor::Service do
       3.times do
         Expeditor::Command.new(service: service) {
           raise
-        }.with_fallback { nil }.start.get
+        }.set_fallback { nil }.start.get
       end
       status = service.current_status
       expect(status.success).to eq(0)
@@ -126,7 +126,7 @@ describe Expeditor::Service do
       it 'returns fallback value' do
         result = Expeditor::Command.new(service: service) {
           raise 'error!'
-        }.with_fallback {
+        }.set_fallback {
           0
         }.start.get
         expect(result).to eq(0)
@@ -142,7 +142,7 @@ describe Expeditor::Service do
         expect {
           Expeditor::Command.new(service: service) {
             raise 'error!'
-          }.with_fallback {
+          }.set_fallback {
             0
           }.start.get
         }.to raise_error(RuntimeError, 'error!')

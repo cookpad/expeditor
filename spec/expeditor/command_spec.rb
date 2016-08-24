@@ -86,7 +86,7 @@ describe Expeditor::Command do
         commands = 1000.times.map do
           Expeditor::Command.start(service: service) do
             raise error_in_command
-          end.with_fallback do
+          end.set_fallback do
             1
           end
         end
@@ -120,7 +120,7 @@ describe Expeditor::Command do
     context 'with fallback' do
       it 'should be true (both) if the command with no fallback is started' do
         command = simple_command(42)
-        fallback_command = command.with_fallback { 0 }
+        fallback_command = command.set_fallback { 0 }
         expect(command.started?).to be false
         expect(fallback_command.started?).to be false
         command.start
@@ -130,7 +130,7 @@ describe Expeditor::Command do
 
       it 'should be true (both) if the command with fallback is started' do
         command = simple_command(42)
-        fallback_command = command.with_fallback { 0 }
+        fallback_command = command.set_fallback { 0 }
         expect(command.started?).to be false
         expect(fallback_command.started?).to be false
         fallback_command.start
@@ -192,10 +192,10 @@ describe Expeditor::Command do
     end
   end
 
-  describe '#with_fallback' do
+  describe '#set_fallback' do
     it 'should return new command and same normal_future' do
       command = simple_command(42)
-      fallback_command = command.with_fallback do
+      fallback_command = command.set_fallback do
         0
       end
       expect(fallback_command).to eq(command)
@@ -207,7 +207,7 @@ describe Expeditor::Command do
       command.start
       command.wait
       start_time = Time.now
-      fallback_command = command.with_fallback do
+      fallback_command = command.set_fallback do
         sleep 0.1
         0
       end
@@ -217,7 +217,7 @@ describe Expeditor::Command do
 
     context 'with normal success' do
       it 'should return normal result' do
-        command = simple_command(42).with_fallback { 0 }
+        command = simple_command(42).set_fallback { 0 }
         command.start
         expect(command.get).to eq(42)
       end
@@ -241,7 +241,7 @@ describe Expeditor::Command do
         command = Expeditor::Command.new {
           sleep 0.1
           raise error_in_command
-        }.with_fallback {
+        }.set_fallback {
           sleep 0.1
           42
         }
@@ -253,7 +253,7 @@ describe Expeditor::Command do
     context 'with fallback but normal success' do
       it 'should not wait fallback execution' do
         start_time = Time.now
-        command = simple_command(42).with_fallback do
+        command = simple_command(42).set_fallback do
           sleep 0.1
           0
         end
@@ -293,7 +293,7 @@ describe Expeditor::Command do
 
     context 'with normal success and with fallback' do
       it 'should run callback with success' do
-        command = simple_command(42).with_fallback { 0 }
+        command = simple_command(42).set_fallback { 0 }
         success = nil
         value = nil
         reason = nil
@@ -329,7 +329,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback success' do
       it 'should run callback with success' do
-        command = error_command(error_in_command, 42).with_fallback { 0 }
+        command = error_command(error_in_command, 42).set_fallback { 0 }
         success = nil
         value = nil
         reason = nil
@@ -347,7 +347,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should run callback with failure' do
-        command = error_command(error_in_command, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).set_fallback do |e|
           raise e
         end
         success = nil
@@ -381,7 +381,7 @@ describe Expeditor::Command do
 
     context 'with normal success and with fallback' do
       it 'should run callback' do
-        command = simple_command(42).with_fallback { 0 }
+        command = simple_command(42).set_fallback { 0 }
         res = nil
         command.on_success do |v|
           res = v
@@ -405,7 +405,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback success' do
       it 'should run callback' do
-        command = error_command(error_in_command, 42).with_fallback do
+        command = error_command(error_in_command, 42).set_fallback do
           0
         end
         res = nil
@@ -419,7 +419,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should not run callback' do
-        command = error_command(error_in_command, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).set_fallback do |e|
           raise e
         end
         res = nil
@@ -459,7 +459,7 @@ describe Expeditor::Command do
 
     context 'with normal success and with fallback' do
       it 'should not run callback' do
-        command = simple_command(42).with_fallback do
+        command = simple_command(42).set_fallback do
           0
         end
         flag = false
@@ -473,7 +473,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback success' do
       it 'should not run callback' do
-        command = error_command(error_in_command, 42).with_fallback do
+        command = error_command(error_in_command, 42).set_fallback do
           0
         end
         flag = false
@@ -487,7 +487,7 @@ describe Expeditor::Command do
 
     context 'with normal failure and with fallback failure' do
       it 'should run callback' do
-        command = error_command(error_in_command, 42).with_fallback do |e|
+        command = error_command(error_in_command, 42).set_fallback do |e|
           raise e
         end
         flag = false
@@ -530,7 +530,7 @@ describe Expeditor::Command do
       expect(command.started?).to be true
       expect(command.get).to eq(42)
       expect(command.start).to eq(command)
-      command_f = command.with_fallback { 0 }
+      command_f = command.set_fallback { 0 }
       expect(command_f.get).to eq(42)
       command.wait
     end

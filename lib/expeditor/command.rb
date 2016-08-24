@@ -56,9 +56,14 @@ module Expeditor
       end
     end
 
-    def with_fallback(&block)
+    def set_fallback(&block)
       reset_fallback(&block)
       self
+    end
+
+    def with_fallback(&block)
+      warn 'Expeditor::Command#with_fallback is deprecated. Please use set_fallback instead'
+      set_fallback(&block)
     end
 
     def wait
