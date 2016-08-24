@@ -8,6 +8,8 @@ It is inspired by [Netflix/Hystrix](https://github.com/Netflix/Hystrix).
 
 ## Installation
 
+Expeditor currently supports Ruby 2.1 and higher.
+
 Add this line to your application's Gemfile:
 
 ```ruby

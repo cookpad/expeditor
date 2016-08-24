@@ -1,5 +1,6 @@
 ## Master (unreleased)
 
+- Drop support for MRI 2.0.x [#15](https://github.com/cookpad/expeditor/pull/15)
 - Deprecate Expeditor::Command#with_fallback. Use `set_fallback` instead [#14](https://github.com/cookpad/expeditor/pull/14)
 
 ## 0.4.0
