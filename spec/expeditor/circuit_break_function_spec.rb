@@ -92,11 +92,12 @@ describe Expeditor::Command do
           sleep: 0,
         )
         failure_commands = 2000.times.map do
-          Expeditor::Command.start(service: service) do
+          command = Expeditor::Command.new(service: service) do
             raise RuntimeError
           end.set_fallback do
             1
           end
+          command.start
         end
         success_commands = 8000.times.map do
           Expeditor::Command.start(service: service) do

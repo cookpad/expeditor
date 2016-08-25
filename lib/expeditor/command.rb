@@ -57,6 +57,9 @@ module Expeditor
     end
 
     def set_fallback(&block)
+      if started?
+        raise AlreadyStartedError, "Do not allow set_fallback call after command is started"
+      end
       reset_fallback(&block)
       self
     end
