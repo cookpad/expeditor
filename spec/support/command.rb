@@ -11,9 +11,8 @@ def sleep_command(n, v, opts = {})
   end
 end
 
-def error_command(e, v, opts = {})
+def error_command(e, opts = {})
   Expeditor::Command.new(opts) do
     raise e
-    v
   end
 end

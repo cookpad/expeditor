@@ -33,7 +33,7 @@ describe Expeditor::Command do
     context 'with failure' do
       it 'should throw error DependencyError' do
         command1 = simple_command(42)
-        command2 = error_command(error_in_command, 42)
+        command2 = error_command(error_in_command)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
@@ -46,7 +46,7 @@ describe Expeditor::Command do
       it 'should throw error immediately' do
         start = Time.now
         command1 = sleep_command(0.1, 42)
-        command2 = error_command(error_in_command, 100)
+        command2 = error_command(error_in_command)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
@@ -82,7 +82,6 @@ describe Expeditor::Command do
         command = Expeditor::Command.new(dependencies: commands) do |*vs|
           vs.inject(:+)
         end
-        start = Time.now
         command.start
         expect(command.get).to eq(400)
       end
@@ -113,7 +112,7 @@ describe Expeditor::Command do
 
     context 'with failure of normal' do
       it 'should be fallback value' do
-        command = error_command(error_in_command, 42).set_fallback { 0 }
+        command = error_command(error_in_command).set_fallback { 0 }
         command.start
         expect(command.get).to eq(0)
       end
@@ -123,7 +122,7 @@ describe Expeditor::Command do
       let(:error_in_fallback) { Class.new(Exception) }
 
       it 'should throw fallback error' do
-        command = error_command(error_in_command, 42).set_fallback do
+        command = error_command(error_in_command).set_fallback do
           raise error_in_fallback
         end
         command.start
