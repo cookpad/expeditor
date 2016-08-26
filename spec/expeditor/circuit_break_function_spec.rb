@@ -92,11 +92,12 @@ describe Expeditor::Command do
           sleep: 0,
         )
         failure_commands = 2000.times.map do
-          Expeditor::Command.start(service: service) do
+          command = Expeditor::Command.new(service: service) do
             raise RuntimeError
           end.set_fallback do
             1
           end
+          command.start
         end
         success_commands = 8000.times.map do
           Expeditor::Command.start(service: service) do
@@ -104,7 +105,7 @@ describe Expeditor::Command do
           end
         end
         reason = nil
-        command = Expeditor::Command.start(
+        command = Expeditor::Command.new(
           service: service,
           dependencies: failure_commands + success_commands,
         ) do |*vs|
@@ -113,6 +114,7 @@ describe Expeditor::Command do
           reason = e
           0
         end
+        command.start
         expect(command.get).to eq(0)
         expect(reason).to be_instance_of(Expeditor::CircuitBreakError)
         service.shutdown

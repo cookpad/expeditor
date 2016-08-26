@@ -84,11 +84,12 @@ describe Expeditor::Command do
       it 'should not throw MultipleAssignmentError' do
         service = Expeditor::Service.new(threshold: 0, non_break_count: 10000)
         commands = 1000.times.map do
-          Expeditor::Command.start(service: service) do
+          command = Expeditor::Command.new(service: service) do
             raise error_in_command
           end.set_fallback do
             1
           end
+          command.start
         end
         10.times do
           commands.each(&:start)
@@ -204,14 +205,13 @@ describe Expeditor::Command do
 
     it 'should not block' do
       command = error_command(error_in_command, nil)
-      command.start
-      command.wait
       start_time = Time.now
       fallback_command = command.set_fallback do
         sleep 0.1
         0
       end
       expect(Time.now - start_time).to be < 0.1
+      command.start
       expect(fallback_command.get).to eq(0)
     end
 
@@ -220,6 +220,14 @@ describe Expeditor::Command do
         command = simple_command(42).set_fallback { 0 }
         command.start
         expect(command.get).to eq(42)
+      end
+    end
+
+    context 'after #start called' do
+      it 'should throw AlreadyStartedError' do
+        command = simple_command(42)
+        command.start
+        expect { command.set_fallback{} }.to raise_error(Expeditor::AlreadyStartedError)
       end
     end
   end
@@ -530,8 +538,6 @@ describe Expeditor::Command do
       expect(command.started?).to be true
       expect(command.get).to eq(42)
       expect(command.start).to eq(command)
-      command_f = command.set_fallback { 0 }
-      expect(command_f.get).to eq(42)
       command.wait
     end
   end

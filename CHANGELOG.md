@@ -2,6 +2,7 @@
 
 - Drop support for MRI 2.0.x [#15](https://github.com/cookpad/expeditor/pull/15)
 - Deprecate Expeditor::Command#with_fallback. Use `set_fallback` instead [#14](https://github.com/cookpad/expeditor/pull/14)
+- Do not allow set_fallback call after command is started. [#18](https://github.com/cookpad/expeditor/pull/18)
 
 ## 0.4.0
 - Add Expeditor::Service#current\_status [#9](https://github.com/cookpad/expeditor/issues/9)
