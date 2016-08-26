@@ -149,7 +149,7 @@ end
 
 ### synchronous execution
 
-Use `Expeditor::Command#run` instead of `#start`, Command executes synchronous on current thread.
+Use `current_thread` option of `#start`, command executes synchronous on current thread.
 
 ```ruby
 command1 = Expeditor::Command.new do
@@ -160,8 +160,8 @@ command2 = Expeditor::Command.new do
   ...
 end
 
-command1.run # blocking
-command2.run # blocking
+command1.start(current_thread: true) # blocking
+command2.start(current_thread: true) # blocking
 
 command1.get
 command2.get

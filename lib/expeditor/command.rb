@@ -22,18 +22,14 @@ module Expeditor
       @ivar = Concurrent::IVar.new
     end
 
-    def start
+    # @param current_thread [Boolean] Execute the task on current thread(blocking)
+    def start(current_thread: false)
       if not started?
-        prepare
-        @normal_future.safe_execute
-      end
-      self
-    end
-
-    # run is similar to the `start`, but the method is executed on the current thread.
-    def run
-      if not started?
-        prepare(Concurrent::ImmediateExecutor.new)
+        if current_thread
+          prepare(Concurrent::ImmediateExecutor.new)
+        else
+          prepare
+        end
         @normal_future.safe_execute
       end
       self
