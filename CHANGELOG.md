@@ -1,4 +1,6 @@
-## Master (unreleased)
+<!-- ## Master (unreleased) -->
+
+## 0.5.0
 
 - Add a `current_thread` option of `Expeditor::Command#start` method to execute a task on current thread [#13](https://github.com/cookpad/expeditor/pull/13)
 - Drop support for MRI 2.0.x [#15](https://github.com/cookpad/expeditor/pull/15)
