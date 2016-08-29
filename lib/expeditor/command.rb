@@ -38,8 +38,9 @@ module Expeditor
     # Equivalent to retryable gem options
     def start_with_retry(retryable_options = {})
       unless started?
+        current_thread = retryable_options.delete(:current_thread)
         @retryable_options.set(retryable_options)
-        start
+        start(current_thread: current_thread)
       end
       self
     end
