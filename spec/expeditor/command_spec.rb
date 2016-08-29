@@ -81,6 +81,75 @@ describe Expeditor::Command do
     end
   end
 
+  describe '#run' do
+    context 'with normal' do
+      it 'should run on current thread' do
+        Thread.current.thread_variable_set('foo', 'bar')
+        command = Expeditor::Command.new do
+          Thread.current.thread_variable_get('foo')
+        end
+        expect(command.run.get).to eq('bar')
+      end
+
+      it 'should return self' do
+        command = simple_command(42)
+        expect(command.run).to eq(command)
+      end
+
+      it 'should ignore from the second time' do
+        count = 0
+        command = Expeditor::Command.new do
+          count += 1
+          count
+        end
+        command.run
+        command.run
+        command.run
+        expect(command.get).to eq(1)
+        expect(count).to eq(1)
+      end
+    end
+
+    context 'with fallback' do
+      it 'should work fallback proc' do
+        command = error_command(error_in_command, nil)
+        command.set_fallback do
+          42
+        end
+
+        expect(command.run.get).to eq(42)
+      end
+
+      it 'should work fallback on current thread' do
+        Thread.current.thread_variable_set("count", 1)
+        command = Expeditor::Command.new do
+          count = Thread.current.thread_variable_get("count")
+          count += 1
+          Thread.current.thread_variable_set("count", count) # => 2
+          raise error_in_command
+        end
+
+        command.set_fallback do
+          count = Thread.current.thread_variable_get("count")
+          count += 1
+          count # => 3
+        end
+
+        expect(command.run.get).to eq(3)
+      end
+
+      it 'should work set_fallback after run' do
+        command = error_command(error_in_command, nil)
+        command.run
+        command.with_fallback do
+          42
+        end
+
+        expect(command.get).to eq(42)
+      end
+    end
+  end
+
   describe '#started?' do
     context 'with started' do
       it 'should be true' do

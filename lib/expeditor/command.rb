@@ -17,11 +17,22 @@ module Expeditor
       @normal_future = initial_normal(&block)
       @fallback_var = nil
       @retryable_options = Concurrent::IVar.new
+      @executor = @service.executor
     end
 
     def start
       if not started?
         @dependencies.each(&:start)
+        @normal_future.safe_execute
+      end
+      self
+    end
+
+    def run
+      if not started?
+        @dependencies.each(&:start)
+        @executor = Concurrent::ImmediateExecutor.new
+        @normal_future.instance_variable_set(:@executor, @executor)
         @normal_future.safe_execute
       end
       self
@@ -122,7 +133,7 @@ module Expeditor
       @fallback_var = Concurrent::IVar.new
       @normal_future.add_observer do |_, value, reason|
         if reason != nil
-          future = RichFuture.new(executor: Concurrent.global_io_executor) do
+          future = RichFuture.new(executor: @executor) do
             success, val, reason = Concurrent::SafeTaskExecutor.new(block, rescue_exception: true).execute(reason)
             @fallback_var.send(:complete, success, val, reason)
           end
