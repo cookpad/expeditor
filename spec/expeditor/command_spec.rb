@@ -91,9 +91,9 @@ describe Expeditor::Command do
     end
 
     context 'with not started' do
-      it 'should be false' do
+      it 'should be falsy' do
         command = simple_command(42)
-        expect(command.started?).to be false
+        expect(command.started?).to be_falsy
       end
     end
 
@@ -101,8 +101,8 @@ describe Expeditor::Command do
       it 'should be true (both) if the command with no fallback is started' do
         command = simple_command(42)
         fallback_command = command.set_fallback { 0 }
-        expect(command.started?).to be false
-        expect(fallback_command.started?).to be false
+        expect(command.started?).to be_falsy
+        expect(fallback_command.started?).to be_falsy
         command.start
         expect(command.started?).to be true
         expect(fallback_command.started?).to be true
@@ -111,8 +111,8 @@ describe Expeditor::Command do
       it 'should be true (both) if the command with fallback is started' do
         command = simple_command(42)
         fallback_command = command.set_fallback { 0 }
-        expect(command.started?).to be false
-        expect(fallback_command.started?).to be false
+        expect(command.started?).to be_falsy
+        expect(fallback_command.started?).to be_falsy
         fallback_command.start
         expect(command.started?).to be true
         expect(fallback_command.started?).to be true
