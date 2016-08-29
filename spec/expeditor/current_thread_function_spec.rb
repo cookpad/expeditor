@@ -5,7 +5,7 @@ describe Expeditor::Command do
 
   describe '#start' do
     context 'with normal' do
-      it 'should execute on current thread' do
+      it 'executes on current thread' do
         Thread.current.thread_variable_set('foo', 'bar')
         command = Expeditor::Command.new do
           Thread.current.thread_variable_get('foo')
@@ -13,12 +13,12 @@ describe Expeditor::Command do
         expect(command.start(current_thread: true).get).to eq('bar')
       end
 
-      it 'should return self' do
+      it 'returns self' do
         command = simple_command(42)
         expect(command.start(current_thread: true)).to eq(command)
       end
 
-      it 'should ignore from the second time' do
+      it 'ignores from the second time' do
         count = 0
         command = Expeditor::Command.new do
           count += 1
@@ -33,7 +33,7 @@ describe Expeditor::Command do
     end
 
     context 'with fallback' do
-      it 'should work fallback proc' do
+      it 'works fallback proc' do
         command = error_command(error_in_command)
         command.set_fallback do
           42
@@ -42,7 +42,7 @@ describe Expeditor::Command do
         expect(command.start(current_thread: true).get).to eq(42)
       end
 
-      it 'should work fallback on current thread' do
+      it 'works fallback on current thread' do
         Thread.current.thread_variable_set("count", 1)
         command = Expeditor::Command.new do
           count = Thread.current.thread_variable_get("count")
@@ -62,14 +62,14 @@ describe Expeditor::Command do
     end
 
     context 'explicitly specify `current_thread: false`' do
-      it 'should be asynchronous' do
+      it 'is asynchronous' do
         command = sleep_command(0.2, nil)
         start_time = Time.now
         command.start(current_thread: false)
         expect(Time.now - start_time).to be < 0.2
       end
 
-      it 'should not execute on current thread' do
+      it 'does not execute on current thread' do
         Thread.current.thread_variable_set('foo', 1)
         command = Expeditor::Command.new do
           Thread.current.thread_variable_get('foo')
@@ -82,7 +82,7 @@ describe Expeditor::Command do
 
   describe '#start_with_retry' do
     context 'with 3 tries' do
-      it 'should execute 3 times on current thread' do
+      it 'executes 3 times on current thread' do
         Thread.current.thread_variable_set('count', 0)
         command = Expeditor::Command.new do
           count = Thread.current.thread_variable_get('count')
@@ -97,14 +97,14 @@ describe Expeditor::Command do
     end
 
     context 'explicitly specify `current_thread: false`' do
-      it 'should be asynchronous' do
+      it 'is asynchronous' do
         command = sleep_command(0.2, nil)
         start_time = Time.now
         command.start_with_retry(current_thread: false)
         expect(Time.now - start_time).to be < 0.2
       end
 
-      it 'should not execute on current thread' do
+      it 'does not execute on current thread' do
         Thread.current.thread_variable_set('foo', 1)
         command = Expeditor::Command.new do
           Thread.current.thread_variable_get('foo')
