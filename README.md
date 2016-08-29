@@ -147,6 +147,26 @@ command = Expeditor::Command.new(service: service) do
 end
 ```
 
+### synchronous execution
+
+Use `current_thread` option of `#start`, command executes synchronous on current thread.
+
+```ruby
+command1 = Expeditor::Command.new do
+  ...
+end
+
+command2 = Expeditor::Command.new do
+  ...
+end
+
+command1.start(current_thread: true) # blocking
+command2.start(current_thread: true) # blocking
+
+command1.get
+command2.get
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
