@@ -24,7 +24,7 @@ module Expeditor
 
     # @param current_thread [Boolean] Execute the task on current thread(blocking)
     def start(current_thread: false)
-      if not started?
+      unless started?
         if current_thread
           prepare(Concurrent::ImmediateExecutor.new)
         else
@@ -37,7 +37,7 @@ module Expeditor
 
     # Equivalent to retryable gem options
     def start_with_retry(retryable_options = {})
-      if not started?
+      unless started?
         @retryable_options.set(retryable_options)
         start
       end
@@ -49,7 +49,7 @@ module Expeditor
     end
 
     def get
-      raise NotStartedError if not started?
+      raise NotStartedError unless started?
       @normal_future.get_or_else do
         if @fallback_block && @service.fallback_enabled?
           @ivar.wait
@@ -78,7 +78,7 @@ module Expeditor
     end
 
     def wait
-      raise NotStartedError if not started?
+      raise NotStartedError unless started?
       @ivar.wait
     end
 
