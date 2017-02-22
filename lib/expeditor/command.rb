@@ -236,15 +236,12 @@ module Expeditor
       @normal_future.add_observer do |_, value, reason|
         if reason # failure
           if @fallback_block
-            future = RichFuture.new(executor: executor) do
-              success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
-              if success
-                @ivar.set(value)
-              else
-                @ivar.fail(reason)
-              end
+            success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
+            if success
+              @ivar.set(value)
+            else
+              @ivar.fail(reason)
             end
-            future.safe_execute
           else
             @ivar.fail(reason)
           end
