@@ -234,17 +234,17 @@ module Expeditor
     def prepare(executor = @service.executor)
       @normal_future = initial_normal(executor, &@normal_block)
       @normal_future.add_observer do |_, value, reason|
-        if reason # failure
-          if @fallback_block
-            future = RichFuture.new(executor: executor) do
-              success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
-              @ivar.send(:complete, success, value, reason)
-            end
-            future.safe_execute
+        case
+        when reason && @fallback_block
+          success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
+          if success
+            @ivar.set(value)
           else
             @ivar.fail(reason)
           end
-        else # success
+        when reason
+          @ivar.fail(reason)
+        else                    # success
           @ivar.set(value)
         end
       end
