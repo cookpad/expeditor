@@ -139,14 +139,16 @@ Expeditor's circuit breaker has a few configuration for how it collects service 
 For service metrics, Expeditor collects them with the given time window.
 The metrics is guradually collected by breaking given time window into some peice of short time windows and resetting previous metrics when passing each short time window.
 
-`non_break_count` is used to ignore requests to the service which is not frequentlly requested.
+`non_break_count` is used to ignore requests to the service which is not frequentlly requested. Configure this value considering your estimated "requests per period to the service".
+For example, when `period = 10` and `non_break_count = 20` and the requests do not occur more than 20 per 10 seconds, the circuit never opens because Expeditor ignores that "small number of requests".
+If you don't ignore the failures in that case, set `non_break_count` to smaller value than `20`.
 
 ```ruby
 service = Expeditor::Service.new(
-  threshold: 0.5,      # If the failure rate is more than or equal to threshold, the circuit will be opened.
-  sleep: 1,            # If once the circuit is opened, the circuit is still open until sleep time seconds is passed even though failure rate is less than threshold.
-  non_break_count: 100 # If the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold.
-  period: 10,          # Time window of collecting metrics (in seconds).
+  threshold: 0.5,     # If the failure rate is more than or equal to threshold, the circuit will be opened.
+  sleep: 1,           # If once the circuit is opened, the circuit is still open until sleep time seconds is passed even though failure rate is less than threshold.
+  non_break_count: 20 # If the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold.
+  period: 10,         # Time window of collecting metrics (in seconds).
 )
 
 command = Expeditor::Command.new(service: service) do
