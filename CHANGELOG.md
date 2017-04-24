@@ -1,7 +1,10 @@
-<!-- ## Master (unreleased) -->
+## 0.6.0
+- Improve default configuration of circuit breaker [#25](https://github.com/cookpad/expeditor/pull/25)
+  - Default `non_break_count` is reduced from 100 to 20
+- Return proper status of service [#26](https://github.com/cookpad/expeditor/pull/26)
+  - Use `Expeditor::Service#status` instead of `#current_status`
 
 ## 0.5.0
-
 - Add a `current_thread` option of `Expeditor::Command#start` method to execute a task on current thread [#13](https://github.com/cookpad/expeditor/pull/13)
 - Drop support for MRI 2.0.x [#15](https://github.com/cookpad/expeditor/pull/15)
 - Deprecate Expeditor::Command#with_fallback. Use `set_fallback` instead [#14](https://github.com/cookpad/expeditor/pull/14)
