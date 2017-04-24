@@ -1,6 +1,12 @@
 require 'expeditor/status'
 
 module Expeditor
+  # Bucket is a data structure like circular buffer. It holds some status
+  # objects and it rolls statuses each `per` time (default is 1 second). Once
+  # it reaches the end of statuses array, it backs to start of statuses array
+  # and then reset the status and resumes recording. This is done so that the
+  # statistics are recorded gradually with short time interval rahter than
+  # reset all the record every wide time range (default is 10 seconds).
   class Bucket
     def initialize(opts = {})
       @mutex = Mutex.new
