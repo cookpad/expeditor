@@ -133,13 +133,20 @@ service.reset_status!  # reset status in the service
 ```
 
 ### circuit breaker
+The circuit breaker needs a service metrics (success, failure, timeout, ...) to decide open the circuit or not.
+Expeditor's circuit breaker has a few configuration for how it collects service metrics and how it opens the circuit.
+
+For service metrics, Expeditor collects them with the given time window.
+The metrics is guradually collected by breaking given time window into some peice of short time windows and resetting previous metrics when passing each short time window.
+
+`non_break_count` is used to ignore requests to the service which is not frequentlly requested.
 
 ```ruby
 service = Expeditor::Service.new(
-  period: 10,          # retention period of the service metrics (success, failure, timeout, ...)
-  sleep: 1,            # if once the circuit is opened, the circuit is still open until sleep time is passed even though failure rate is less than threshold
-  threshold: 0.5,      # if the failure rate is more than or equal to threshold, the circuit is opened
-  non_break_count: 100 # if the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold
+  threshold: 0.5,      # If the failure rate is more than or equal to threshold, the circuit will be opened.
+  sleep: 1,            # If once the circuit is opened, the circuit is still open until sleep time seconds is passed even though failure rate is less than threshold.
+  non_break_count: 100 # If the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold.
+  period: 10,          # Time window of collecting metrics (in seconds).
 )
 
 command = Expeditor::Command.new(service: service) do
