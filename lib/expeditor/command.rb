@@ -238,7 +238,11 @@ module Expeditor
           if @fallback_block
             future = RichFuture.new(executor: executor) do
               success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
-              @ivar.send(:complete, success, value, reason)
+              if success
+                @ivar.set(value)
+              else
+                @ivar.fail(reason)
+              end
             end
             future.safe_execute
           else
