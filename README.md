@@ -126,7 +126,7 @@ command = Expeditor::Command.new(service: service) do
   ...
 end
 
-service.current_status
+service.status
 # => #<Expeditor::Status:0x007fdeeeb18468 @break=0, @dependency=0, @failure=0, @rejection=0, @success=0, @timeout=0>
 
 service.reset_status!  # reset status in the service

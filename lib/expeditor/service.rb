@@ -70,7 +70,13 @@ module Expeditor
       @executor.shutdown
     end
 
+    def status
+      @bucket.total
+    end
+
+    # @deprecated
     def current_status
+      warn 'Expeditor::Service#current_status is deprecated. Please use #status instead'
       @bucket.current
     end
 

@@ -29,14 +29,14 @@ module Expeditor
     def total
       acc = @mutex.synchronize do
         update
-        @statuses.inject([0, 0, 0, 0, 0, 0]) do |acc, s|
-          acc[0] += s.success
-          acc[1] += s.failure
-          acc[2] += s.rejection
-          acc[3] += s.timeout
-          acc[4] += s.break
-          acc[5] += s.dependency
-          acc
+        @statuses.inject([0, 0, 0, 0, 0, 0]) do |i, s|
+          i[0] += s.success
+          i[1] += s.failure
+          i[2] += s.rejection
+          i[3] += s.timeout
+          i[4] += s.break
+          i[5] += s.dependency
+          i
         end
       end
       status = Expeditor::Status.new

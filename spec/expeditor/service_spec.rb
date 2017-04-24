@@ -88,7 +88,7 @@ describe Expeditor::Service do
     end
   end
 
-  describe '#current_status' do
+  describe '#status' do
     let(:service) { Expeditor::Service.new(sleep: 10) }
     it 'returns current status' do
       3.times do
@@ -96,9 +96,18 @@ describe Expeditor::Service do
           raise
         }.set_fallback { nil }.start.get
       end
-      status = service.current_status
+      status = service.status
       expect(status.success).to eq(0)
       expect(status.failure).to eq(3)
+    end
+  end
+
+  describe '#current_status' do
+    it 'warns deprecation' do
+      service = Expeditor::Service.new
+      expect {
+        service.current_status
+      }.to output(/current_status is deprecated/).to_stderr
     end
   end
 
