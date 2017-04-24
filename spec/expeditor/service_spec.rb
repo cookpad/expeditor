@@ -74,17 +74,17 @@ describe Expeditor::Service do
 
     it 'should not kill queued tasks' do
       service = Expeditor::Service.new
-      commands = 100.times.map do
+      commands = (0..2).map do |i|
         Expeditor::Command.new(service: service) do
-          sleep 0.01
+          # Trigger service.shutdown while processing commands
+          service.shutdown if i == 1
           1
         end
       end
       command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
         vs.inject(:+)
       end
-      service.shutdown
-      expect(command.get).to eq(100)
+      expect(command.get).to eq(3)
     end
   end
 
