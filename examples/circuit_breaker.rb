@@ -20,7 +20,7 @@ loop do
   }.start
 
   p command.get
-  p service.current_status
+  p service.status
   puts
 
   i += 1
