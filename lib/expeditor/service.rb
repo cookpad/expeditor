@@ -7,7 +7,7 @@ module Expeditor
 
     def initialize(opts = {})
       @executor = opts.fetch(:executor) { Concurrent::ThreadPoolExecutor.new }
-      @threshold = opts.fetch(:threshold, 0.5) # is 0.5 ok?
+      @threshold = opts.fetch(:threshold, 0.5)
       @non_break_count = opts.fetch(:non_break_count, 20)
       @sleep = opts.fetch(:sleep, 1)
       @bucket_opts = {
