@@ -47,37 +47,46 @@ RSpec.describe Expeditor::Command do
 
     context 'with circuit break and wait' do
       it 'should reject execution and back' do
-        service = Expeditor::Service.new(threshold: 0.2, non_break_count: 100, sleep: 0, period: 0.1)
-        failure_commands = 20.times.map do
+        skip 'Need half-open state for circuit breaker'
+
+        sleep_value = 0.03
+        config = { threshold: 0.1, non_break_count: 5, sleep: sleep_value, period: 0.1 }
+        service = Expeditor::Service.new(config)
+        failure_commands = 10.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
           end
         end
-        success_commands = 80.times.map do
-          Expeditor::Command.new(service: service) do
-            0
-          end
-        end
-
         failure_commands.each(&:start)
         failure_commands.each(&:wait)
-        start_time = Time.now
+        expect(service.open?).to eq(true)
+
+        # Store break count to compare later.
+        last_breaked_count = service.status.break
+
+        success_commands = 5.times.map do
+          Expeditor::Command.new(service: service) { 0 }
+        end
         success_commands.each(&:start)
         success_commands.each(&:wait)
-        while true do
-          command = Expeditor::Command.new(service: service) do
-            42
-          end
-          command.start
-          command.wait
-          sleep 0.001
-          begin
-            command.get
-            break
-          rescue
-          end
-        end
-        expect(Time.now - start_time).to be_between(0.088, 0.102)
+        # The executions were short circuited.
+        expect(service.open?).to eq(true)
+        expect(service.status.break).to be > last_breaked_count
+
+        # Wait sleep time then circuit bacomes half-open.
+        sleep sleep_value + 0.01
+        expect(service.open?).to eq(false)
+
+        # The circuit is half-open now so the circuit breaker does not
+        # skip one further execution.
+        command = Expeditor::Command.new(service: service) { 1 }.start
+        expect(command.get).to eq(1)
+
+        # Since the last execution was succeed, the circuit becames closed.
+        expect(service.open?).to eq(false)
+        command = Expeditor::Command.new(service: service) { 1 }.start
+        expect(command.get).to eq(1)
+
         service.shutdown
       end
     end

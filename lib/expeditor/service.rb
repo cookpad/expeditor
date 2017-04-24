@@ -47,6 +47,10 @@ module Expeditor
     end
 
     # break circuit?
+    #
+    # XXX: support half-open state to make use of `sleep` option.
+    # Currently, `sleep` option is useless because we mark failure again even after passing
+    # the `sleep` time.
     def open?
       if @breaking
         if Time.now - @break_start > @sleep
