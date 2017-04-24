@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Service do
+RSpec.describe Expeditor::Service do
   describe '#open?' do
     context 'with no count' do
       it 'should be false' do

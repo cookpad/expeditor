@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Status do
+RSpec.describe Expeditor::Status do
   describe '#initialize' do
     it 'should be zero all' do
       status = Expeditor::Status.new

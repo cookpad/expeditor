@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Command do
+RSpec.describe Expeditor::Command do
   describe '#start_with_retry' do
     context 'with 3 tries' do
       it 'should be run 3 times' do

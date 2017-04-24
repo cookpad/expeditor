@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::RichFuture do
+RSpec.describe Expeditor::RichFuture do
   let(:error_in_future) { Class.new(StandardError) }
 
   describe '#get' do

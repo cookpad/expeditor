@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Command do
+RSpec.describe Expeditor::Command do
   describe 'circuit break function' do
     context 'with circuit break' do
       it 'should reject execution' do

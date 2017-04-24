@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Bucket do
+RSpec.describe Expeditor::Bucket do
   describe '#increment' do
     context 'with same status' do
       it 'should be increased' do

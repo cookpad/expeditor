@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Command do
+RSpec.describe Expeditor::Command do
   let(:error_in_command) { Class.new(StandardError) }
 
   describe '#start' do
