@@ -83,39 +83,41 @@ describe Expeditor::Command do
     end
 
     context 'with circuit break (large case)' do
-      it 'should be ok' do
+      specify 'circuit will be opened after 100 failure and it skips success_commands' do
         service = Expeditor::Service.new(
           executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
-          threshold: 0.2,
-          non_break_count: 10000,
-          period: 10,
-          sleep: 0,
+          threshold: 0.1,
+          non_break_count: 1000,
+          period: 100,
+          sleep: 100, # Should be larger than test case execution time.
         )
+
+        # At first, runs failure_commands and open the circuit.
         failure_commands = 2000.times.map do
-          command = Expeditor::Command.new(service: service) do
+          Expeditor::Command.new(service: service) do
             raise RuntimeError
-          end.set_fallback do
-            1
-          end
-          command.start
+          end.set_fallback { 1 }.start
         end
+
+        # Then runs success_commands but it will be skiped and calls fallback logic.
         success_commands = 8000.times.map do
-          Expeditor::Command.start(service: service) do
-            1
-          end
+          Expeditor::Command.new(service: service) do
+            raise "Won't reach here"
+          end.set_fallback { 1 }.start
         end
+
         reason = nil
-        command = Expeditor::Command.new(
-          service: service,
-          dependencies: failure_commands + success_commands,
-        ) do |*vs|
-          vs.inject(:+)
+        result = Object.new
+        deps = failure_commands + success_commands
+        command = Expeditor::Command.new(service: service, dependencies: deps) do |_|
+          raise "Won't reach here"
         end.set_fallback do |e|
           reason = e
-          0
+          result
         end
         command.start
-        expect(command.get).to eq(0)
+
+        expect(command.get).to eq(result)
         expect(reason).to be_instance_of(Expeditor::CircuitBreakError)
         service.shutdown
       end
