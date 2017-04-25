@@ -51,4 +51,23 @@ RSpec.describe Expeditor::Bucket do
       end
     end
   end
+
+  context 'passing many (> size) buckets' do
+    let(:size) { 3 }
+    let(:per) { 0.01 }
+
+    it 'resets all statuses' do
+      bucket = Expeditor::Bucket.new(size: size, per: per)
+      # Make all statuses dirty.
+      3.times do
+        3.times { bucket.increment(:success) }
+        sleep per
+      end
+      # Move to next bucket.
+      sleep per
+      # Pass size + 1 buckets.
+      sleep (per * size)
+      expect(bucket.total.success).to eq(0)
+    end
+  end
 end
