@@ -82,7 +82,7 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with circuit break (large case)' do
-      specify 'circuit will be opened after 100 failure and it skips success_commands' do
+      specify 'circuit will be opened after 100 failure and skip success_commands' do
         service = Expeditor::Service.new(
           executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
           threshold: 0.1,
