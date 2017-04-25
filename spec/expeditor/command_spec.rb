@@ -58,24 +58,27 @@ RSpec.describe Expeditor::Command do
       end
     end
 
-    context 'with double starting' do
+    context 'with double starting and circuit breaking' do
+      let(:period) { 0.01 }
+      let(:service) { Expeditor::Service.new(threshold: 0.1, non_break_count: 0, sleep: 0, period: period) }
+      let(:commands) do
+        1000.times.map do
+          error_command(error_in_command, service: service).set_fallback { 1 }
+        end
+      end
+
+      # See original test case in df2ea9a957f2eea3889f73187d1915f3eee998a9.
       it 'should not throw MultipleAssignmentError' do
-        service = Expeditor::Service.new(threshold: 0, non_break_count: 10000)
-        commands = 1000.times.map do
-          command = Expeditor::Command.new(service: service) do
-            raise error_in_command
-          end.set_fallback do
-            1
-          end
-          command.start
-        end
-        10.times do
-          commands.each(&:start)
-        end
+        10.times { commands.each(&:start) }
+        commands.each(&:wait)
+        # Wait untill circuit is closed.
+        sleep period * 2
+
         command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
           vs.inject(:+)
         end
         expect(command.get).to eq(1000)
+        service.shutdown
       end
     end
   end
