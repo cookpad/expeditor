@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Expeditor::Service do
+RSpec.describe Expeditor::Service do
   describe '#open?' do
     context 'with no count' do
       it 'should be false' do
@@ -74,31 +74,33 @@ describe Expeditor::Service do
 
     it 'should not kill queued tasks' do
       service = Expeditor::Service.new
-      commands = 100.times.map do
+      commands = (0..2).map do |i|
         Expeditor::Command.new(service: service) do
-          sleep 0.01
+          # Trigger service.shutdown while processing commands
+          service.shutdown if i == 1
           1
         end
       end
       command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
         vs.inject(:+)
       end
-      service.shutdown
-      expect(command.get).to eq(100)
+      expect(command.get).to eq(3)
     end
   end
 
   describe '#status' do
-    let(:service) { Expeditor::Service.new(sleep: 10) }
     it 'returns current status' do
+      # Set large value of period in case test takes long time.
+      service = Expeditor::Service.new(period: 100)
+
       3.times do
         Expeditor::Command.new(service: service) {
           raise
         }.set_fallback { nil }.start.get
       end
-      status = service.status
-      expect(status.success).to eq(0)
-      expect(status.failure).to eq(3)
+
+      expect(service.status.success).to eq(0)
+      expect(service.status.failure).to eq(3)
     end
   end
 
@@ -125,7 +127,7 @@ describe Expeditor::Service do
   end
 
   describe '#fallback_enabled' do
-    let(:service) { Expeditor::Service.new(sleep: 10) }
+    let(:service) { Expeditor::Service.new(period: 10) }
 
     context 'fallback_enabled is true' do
       before do
