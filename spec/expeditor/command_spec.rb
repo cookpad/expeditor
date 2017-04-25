@@ -6,8 +6,9 @@ RSpec.describe Expeditor::Command do
   describe '#start' do
     context 'with normal' do
       it 'should not block' do
-        start = Time.now
         command = sleep_command(1, 42)
+
+        start = Time.now
         command.start
         expect(Time.now - start).to be < 1
       end
@@ -18,16 +19,14 @@ RSpec.describe Expeditor::Command do
       end
 
       it 'should ignore from the second time' do
-        count = 0
+        count = Concurrent::CAtomicFixnum.new(0)
         command = Expeditor::Command.new do
-          count += 1
+          count.increment
           count
         end
-        command.start
-        command.start
-        command.start
-        expect(command.get).to eq(1)
-        expect(count).to eq(1)
+        3.times { command.start }
+        expect(command.get.value).to eq(1)
+        expect(count.value).to eq(1)
       end
     end
 
