@@ -17,16 +17,16 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with normal and sleep' do
+      let(:event) { Concurrent::Event.new }
+
       it 'should start dependencies concurrently' do
-        start = Time.now
-        command1 = sleep_command(0.1, 1)
-        command2 = sleep_command(0.2, 2)
+        command1 = Expeditor::Command.new { event.wait(1); 1 }
+        command2 = Expeditor::Command.new { event.set; 2 }
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
         expect(command3.get).to eq(3)
-        expect(Time.now - start).to be < 0.21
       end
     end
 
