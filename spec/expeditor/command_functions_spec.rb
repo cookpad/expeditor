@@ -43,23 +43,26 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with sleep and failure' do
+      let(:sleep_time) { 1 }
+
       it 'should throw error immediately' do
-        start = Time.now
-        command1 = sleep_command(0.1, 42)
+        command1 = sleep_command(sleep_time, 42)
         command2 = error_command(error_in_command)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
+
         command3.start
+        start = Time.now
         expect { command3.get }.to raise_error(Expeditor::DependencyError)
-        expect(Time.now - start).to be < 0.1
+        expect(Time.now - start).to be < sleep_time
       end
     end
 
     context 'with large number of horizontal dependencies' do
       it 'should be ok' do
         commands = 100.times.map do
-          sleep_command(0.01, 1)
+          simple_command(1)
         end
         command = Expeditor::Command.new(dependencies: commands) do |*vs|
           vs.inject(:+)

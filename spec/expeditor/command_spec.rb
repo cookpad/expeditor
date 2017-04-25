@@ -125,33 +125,31 @@ RSpec.describe Expeditor::Command do
   describe '#get' do
     context 'with success' do
       it 'should return success value' do
-        command = simple_command(42)
-        command.start
+        command = simple_command(42).start
         expect(command.get).to eq(42)
       end
     end
 
     context 'with sleep and success' do
+      let(:sleep_time) { 0.001 }
+      let(:command) { sleep_command(sleep_time, 42).start }
+
       it 'should block and return success value' do
         start = Time.new
-        command = sleep_command(0.1, 42)
-        command.start
         expect(command.get).to eq(42)
-        expect(Time.now - start).to be > 0.1
+        expect(Time.now - start).to be > sleep_time
       end
     end
 
     context 'with failure' do
       it 'should throw exception' do
-        command = error_command(error_in_command)
-        command.start
+        command = error_command(error_in_command).start
         expect { command.get }.to raise_error(error_in_command)
       end
 
-      it 'should throw exception (no deadlock)' do
+      it 'should throw exception without deadlock' do
         error = Class.new(Exception)
-        command = error_command(error)
-        command.start
+        command = error_command(error).start
         expect { command.get }.to raise_error(error)
       end
     end
@@ -164,42 +162,40 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with timeout' do
+      let(:sleep_time) { 1 }
+      let(:command) { sleep_command(sleep_time, 42, timeout: 0.001) }
+      before { command.start }
+
       it 'should throw Timeout::Error' do
         start = Time.now
-        command = sleep_command(1, 42, timeout: 0.1)
-        command.start
         expect { command.get }.to raise_error(Timeout::Error)
-        expect(Time.now - start).to be < 0.12
+        expect(Time.now - start).to be < sleep_time
       end
     end
   end
 
   describe '#set_fallback' do
-    it 'should return new command and same normal_future' do
+    it 'should return new command' do
       command = simple_command(42)
       fallback_command = command.set_fallback do
         0
       end
       expect(fallback_command).to eq(command)
-      # expect(fallback_command.normal_future).to eq(command.normal_future)
     end
 
     it 'should not block' do
       command = error_command(error_in_command)
       start_time = Time.now
       fallback_command = command.set_fallback do
-        sleep 0.1
+        sleep 1
         0
       end
-      expect(Time.now - start_time).to be < 0.1
-      command.start
-      expect(fallback_command.get).to eq(0)
+      expect(Time.now - start_time).to be < 1
     end
 
     context 'with normal success' do
       it 'should return normal result' do
-        command = simple_command(42).set_fallback { 0 }
-        command.start
+        command = simple_command(42).set_fallback { 0 }.start
         expect(command.get).to eq(42)
       end
     end
@@ -214,49 +210,55 @@ RSpec.describe Expeditor::Command do
   end
 
   describe '#wait' do
-    context 'with single' do
+    let(:sleep_time) { 0.001 }
+
+    context 'without fallback' do
       it 'should wait execution' do
-        start_time = Time.now
-        command = sleep_command(0.1, 42)
+        command = sleep_command(sleep_time, nil)
         command.start
+
+        start_time = Time.now
         command.wait
-        expect(Time.now - start_time).to be > 0.1
+        expect(Time.now - start_time).to be > sleep_time
       end
     end
 
     context 'with fallback' do
       it 'should wait execution' do
-        start_time = Time.now
         command = Expeditor::Command.new {
-          sleep 0.1
+          sleep sleep_time
           raise error_in_command
         }.set_fallback {
-          sleep 0.1
-          42
+          sleep sleep_time
+          nil
         }
+
+        start_time = Time.now
         command.start.wait
-        expect(Time.now - start_time).to be_between(0.2, 0.22).inclusive
+        expect(Time.now - start_time).to be > (sleep_time * 2)
       end
     end
 
     context 'with fallback but normal success' do
       it 'should not wait fallback execution' do
-        start_time = Time.now
         command = simple_command(42).set_fallback do
-          sleep 0.1
+          sleep sleep_time
           0
         end
-        command.start
-        command.wait
-        expect(Time.now - start_time).to be < 0.1
+
+        start_time = Time.now
+        command.start.wait
+        expect(Time.now - start_time).to be < sleep_time
         expect(command.get).to eq(42)
       end
     end
 
     context 'with not started' do
-      it 'should throw NotStartedError' do
-        command = sleep_command(0.1, 42)
+      it 'should throw NotStartedError without waiting' do
+        command = sleep_command(sleep_time, 42)
+        start = Time.now
         expect { command.wait }.to raise_error(Expeditor::NotStartedError)
+        expect(Time.now - start).to be < sleep_time
       end
     end
   end
@@ -265,13 +267,9 @@ RSpec.describe Expeditor::Command do
     context 'with normal success and without fallback' do
       it 'should run callback with success' do
         command = simple_command(42)
-        success = nil
-        value = nil
-        reason = nil
+        success, value, reason = nil, nil, nil
         command.on_complete do |s, v, r|
-          success = s
-          value = v
-          reason = r
+          success, value, reason = s, v, r
         end
         command.start.wait
         expect(success).to be true
@@ -283,13 +281,9 @@ RSpec.describe Expeditor::Command do
     context 'with normal success and with fallback' do
       it 'should run callback with success' do
         command = simple_command(42).set_fallback { 0 }
-        success = nil
-        value = nil
-        reason = nil
+        success, value, reason = nil, nil, nil
         command.on_complete do |s, v, r|
-          success = s
-          value = v
-          reason = r
+          success, value, reason = s, v, r
         end
         command.start.wait
         expect(success).to be true
@@ -301,13 +295,9 @@ RSpec.describe Expeditor::Command do
     context 'with normal failure and without fallback' do
       it 'should run callback with failure' do
         command = error_command(error_in_command)
-        success = nil
-        value = nil
-        reason = nil
+        success, value, reason = nil, nil, nil
         command.on_complete do |s, v, r|
-          success = s
-          value = v
-          reason = r
+          success, value, reason = s, v, r
         end
         command.start.wait
         expect(success).to be false
@@ -319,13 +309,9 @@ RSpec.describe Expeditor::Command do
     context 'with normal failure and with fallback success' do
       it 'should run callback with success' do
         command = error_command(error_in_command).set_fallback { 0 }
-        success = nil
-        value = nil
-        reason = nil
+        success, value, reason = nil, nil, nil
         command.on_complete do |s, v, r|
-          success = s
-          value = v
-          reason = r
+          success, value, reason = s, v, r
         end
         command.start.wait
         expect(success).to be true
@@ -339,13 +325,9 @@ RSpec.describe Expeditor::Command do
         command = error_command(error_in_command).set_fallback do |e|
           raise e
         end
-        success = nil
-        value = nil
-        reason = nil
+        success, value, reason = nil, nil, nil
         command.on_complete do |s, v, r|
-          success = s
-          value = v
-          reason = r
+          success, value, reason = s, v, r
         end
         command.start.wait
         expect(success).to be false
@@ -492,8 +474,7 @@ RSpec.describe Expeditor::Command do
   describe '#chain' do
     context 'with normal' do
       it 'should chain command' do
-        command = simple_command(42)
-        command_double = command.chain do |n|
+        command_double = simple_command(42).chain do |n|
           n * 2
         end
         command_double.start
@@ -503,10 +484,9 @@ RSpec.describe Expeditor::Command do
 
     context 'with options' do
       it 'should recognize options' do
-        command = simple_command(42)
-        command_sleep = command.chain(timeout: 0.01) do |n|
+        command_sleep = simple_command(42).chain(timeout: 0.001) do
           sleep 0.1
-          n * 2
+          nil
         end.start
         expect { command_sleep.get }.to raise_error(Timeout::Error)
       end
@@ -517,22 +497,17 @@ RSpec.describe Expeditor::Command do
     it 'should be ok' do
       command = Expeditor::Command.const(42)
       expect(command.started?).to be true
-      expect(command.get).to eq(42)
       expect(command.start).to eq(command)
-      command.wait
+      expect(command.get).to eq(42)
     end
   end
 
   describe '.start' do
     it 'should be already started' do
       command = Expeditor::Command.start do
-        sleep 0.1
         42
       end
-      start_time = Time.new
       expect(command.started?).to be true
-      command.wait
-      expect(Time.now - start_time).to be_between(0.1, 0.11)
       expect(command.get).to be 42
     end
   end

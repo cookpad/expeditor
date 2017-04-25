@@ -109,6 +109,9 @@ module Expeditor
       end
     end
 
+    # XXX: Raise ArgumentError when given `opts` has :dependencies
+    # because this forcefully change given :dependencies.
+    #
     # `chain` returns new command that has self as dependencies
     def chain(opts = {}, &block)
       opts[:dependencies] = [self]
