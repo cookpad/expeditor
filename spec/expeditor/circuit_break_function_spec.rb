@@ -4,43 +4,33 @@ RSpec.describe Expeditor::Command do
   describe 'circuit break function' do
     context 'with circuit break' do
       it 'should reject execution' do
-        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_queue: 0), threshold: 0.5, non_break_count: 100, sleep: 0, period: 10)
-        commands = 100.times.map do
+        executor = Concurrent::ThreadPoolExecutor.new(max_queue: 0)
+        service = Expeditor::Service.new(executor: executor, threshold: 0.0, non_break_count: 2, sleep: 0, period: 10)
+
+        3.times do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
-          end.set_fallback do |e|
-            if e === Expeditor::CircuitBreakError
-              1
-            else
-              0
-            end
-          end
+          end.start.wait
         end
-        commands.each(&:start)
-        sum = commands.map(&:get).inject(:+)
-        expect(sum).to eq(0)
-        command = Expeditor::Command.new(service: service) do
-          42
-        end
-        command.start
+        expect(service.open?).to eq(true)
+
+        command = Expeditor::Command.new(service: service) { 42 }.start
         expect { command.get }.to raise_error(Expeditor::CircuitBreakError)
+
         service.shutdown
       end
 
       it 'should not count circuit break' do
         service = Expeditor::Service.new(threshold: 0, non_break_count: 0)
-        commands = 100.times.map do
+        5.times do
           Expeditor::Command.new(service: service) do
             raise Expeditor::CircuitBreakError
-          end
+          end.start.wait
         end
-        commands.map(&:start)
-        commands.map(&:wait)
-        command = Expeditor::Command.new(service: service) do
-          42
-        end
-        command.start
+
+        command = Expeditor::Command.new(service: service) { 42 }.start
         expect(command.get).to eq(42)
+
         service.shutdown
       end
     end
