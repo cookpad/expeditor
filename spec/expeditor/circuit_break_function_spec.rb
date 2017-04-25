@@ -116,7 +116,7 @@ RSpec.describe Expeditor::Command do
         end
         command.start
 
-        expect(command.get).to eq(result)
+        expect(command.get).to equal(result)
         expect(reason).to be_instance_of(Expeditor::CircuitBreakError)
         service.shutdown
       end
