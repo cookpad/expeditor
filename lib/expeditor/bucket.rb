@@ -62,11 +62,37 @@ module Expeditor
       passing = last_passing
       if passing > 0
         @current_start = @current_start + @per_time * passing
-        passing = passing.div @size + @size if passing > 2 * @size
-        passing.times do
+        cut_passing_size_if_possible(passing, @size).times do
           @current_index = next_index
           @statuses[@current_index].reset
         end
+      end
+    end
+
+    # This logic is used for cutting passing size. When passing size is greater
+    # than buckets size, we can cut passing size to less than bucket size
+    # because the buckets are circulated.
+    #
+    # `*` is current position.
+    # When the bucket size is 3:
+    #
+    #   [*, , ]
+    #
+    # Then when the passing = 3, position will be 0 (0-origin):
+    #
+    #   [*, , ] -3> [ ,*, ] -2> [ , ,*] -1> [*, , ]
+    #
+    # Then passing = 6, position will be 0 again:
+    #
+    #   [*, , ] -6> [ ,*, ] -5> [ , ,*] -4> [*, , ] -3> [ ,*, ] -2> [ , ,*] -1> [*, , ]
+    #
+    # In that case we can cut the passing size from 6 to 3.
+    # That is "cut passing size" here.
+    def cut_passing_size_if_possible(passing, size)
+      if passing >= size * 2
+        (passing % size) + size
+      else
+        passing
       end
     end
 
