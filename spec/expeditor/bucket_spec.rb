@@ -66,7 +66,7 @@ RSpec.describe Expeditor::Bucket do
       # Move to next bucket.
       sleep per
       # Pass size + 1 buckets.
-      sleep (per * size)
+      sleep per * size
       expect(bucket.total.success).to eq(0)
     end
   end
