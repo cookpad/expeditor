@@ -105,22 +105,6 @@ RSpec.describe Expeditor::Command do
   end
 
   describe 'fallback function' do
-    context 'with normal' do
-      it 'should be normal value' do
-        command = simple_command(42).set_fallback { 0 }
-        command.start
-        expect(command.get).to eq(42)
-      end
-    end
-
-    context 'with failure of normal' do
-      it 'should be fallback value' do
-        command = error_command(error_in_command).set_fallback { 0 }
-        command.start
-        expect(command.get).to eq(0)
-      end
-    end
-
     context 'with fail both' do
       let(:error_in_fallback) { Class.new(Exception) }
 
