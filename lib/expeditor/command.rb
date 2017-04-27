@@ -128,59 +128,37 @@ module Expeditor
 
     private
 
-    def reset_fallback(&block)
-      @fallback_block = block
-    end
-
-    def breakable_block(args, &block)
-      if @service.open?
-        raise CircuitBreakError
-      else
-        block.call(*args)
-      end
-    end
-
-    def retryable_block(args, &block)
-      if @retryable_options.fulfilled?
-        Retryable.retryable(@retryable_options.value) do |retries, exception|
-          metrics(exception) if retries > 0
-          breakable_block(args, &block)
+    # set future
+    # set fallback future as an observer
+    # start dependencies
+    def prepare(executor = @service.executor)
+      @normal_future = initial_normal(executor, &@normal_block)
+      @normal_future.add_observer do |_, value, reason|
+        if reason # failure
+          if @fallback_block
+            future = RichFuture.new(executor: executor) do
+              success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
+              if success
+                @ivar.set(value)
+              else
+                @ivar.fail(reason)
+              end
+            end
+            future.safe_execute
+          else
+            @ivar.fail(reason)
+          end
+        else # success
+          @ivar.set(value)
         end
-      else
-        breakable_block(args, &block)
       end
+
+      @dependencies.each(&:start)
     end
 
-    def timeout_block(args, &block)
-      if @timeout
-        Timeout::timeout(@timeout) do
-          retryable_block(args, &block)
-        end
-      else
-        retryable_block(args, &block)
-      end
-    end
-
-    def metrics(reason)
-      case reason
-      when nil
-        @service.success
-      when Timeout::Error
-        @service.timeout
-      when RejectedExecutionError
-        @service.rejection
-      when CircuitBreakError
-        @service.break
-      when DependencyError
-        @service.dependency
-      else
-        @service.failure
-      end
-    end
-
-    # timeout do
-    #   retryable do
-    #     circuit break do
+    # timeout_block do
+    #   retryable_block do
+    #     breakable_block do
     #       block.call
     #     end
     #   end
@@ -227,36 +205,58 @@ module Expeditor
       end
     end
 
-    def on(&callback)
-      @ivar.add_observer(&callback)
+    def timeout_block(args, &block)
+      if @timeout
+        Timeout::timeout(@timeout) do
+          retryable_block(args, &block)
+        end
+      else
+        retryable_block(args, &block)
+      end
     end
 
-    # set future
-    # set fallback future as an observer
-    # start dependencies
-    def prepare(executor = @service.executor)
-      @normal_future = initial_normal(executor, &@normal_block)
-      @normal_future.add_observer do |_, value, reason|
-        if reason # failure
-          if @fallback_block
-            future = RichFuture.new(executor: executor) do
-              success, value, reason = Concurrent::SafeTaskExecutor.new(@fallback_block, rescue_exception: true).execute(reason)
-              if success
-                @ivar.set(value)
-              else
-                @ivar.fail(reason)
-              end
-            end
-            future.safe_execute
-          else
-            @ivar.fail(reason)
-          end
-        else # success
-          @ivar.set(value)
+    def retryable_block(args, &block)
+      if @retryable_options.fulfilled?
+        Retryable.retryable(@retryable_options.value) do |retries, exception|
+          metrics(exception) if retries > 0
+          breakable_block(args, &block)
         end
+      else
+        breakable_block(args, &block)
       end
+    end
 
-      @dependencies.each(&:start)
+    def breakable_block(args, &block)
+      if @service.open?
+        raise CircuitBreakError
+      else
+        block.call(*args)
+      end
+    end
+
+    def metrics(reason)
+      case reason
+      when nil
+        @service.success
+      when Timeout::Error
+        @service.timeout
+      when RejectedExecutionError
+        @service.rejection
+      when CircuitBreakError
+        @service.break
+      when DependencyError
+        @service.dependency
+      else
+        @service.failure
+      end
+    end
+
+    def reset_fallback(&block)
+      @fallback_block = block
+    end
+
+    def on(&callback)
+      @ivar.add_observer(&callback)
     end
 
     class ConstCommand < Command
