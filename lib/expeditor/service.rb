@@ -16,6 +16,7 @@ module Expeditor
       }
       reset_status!
       @fallback_enabled = true
+      @mutex = Mutex.new
     end
 
     def success
@@ -52,20 +53,22 @@ module Expeditor
     # Currently, `sleep` option is useless because we mark failure again even after passing
     # the `sleep` time.
     def open?
-      if @breaking
-        if Time.now - @break_start > @sleep
-          @breaking = false
-          @break_start = nil
-        else
-          return true
+      @mutex.synchronize do
+        if @breaking
+          if Time.now - @break_start > @sleep
+            @breaking = false
+            @break_start = nil
+          else
+            return true
+          end
         end
+        open = calc_open
+        if open
+          @breaking = true
+          @break_start = Time.now
+        end
+        open
       end
-      open = calc_open
-      if open
-        @breaking = true
-        @break_start = Time.now
-      end
-      open
     end
 
     # shutdown thread pool
@@ -84,6 +87,7 @@ module Expeditor
       @bucket.current
     end
 
+    # Thread-unsafe.
     def reset_status!
       @bucket = Expeditor::Bucket.new(@bucket_opts)
       @breaking = false
