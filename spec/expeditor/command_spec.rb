@@ -253,6 +253,35 @@ RSpec.describe Expeditor::Command do
       end
     end
 
+    context 'with fail both' do
+      let(:error_in_fallback) { Class.new(Exception) }
+
+      it 'should throw fallback error' do
+        command = error_command(error_in_command).set_fallback do
+          raise error_in_fallback
+        end
+        command.start
+        expect { command.get }.to raise_error(error_in_fallback)
+      end
+    end
+
+    context 'with large number of commands' do
+      it 'should not throw any errors' do
+        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 10, min_threads: 10, max_queue: 100))
+        commands = 100.times.map do
+          Expeditor::Command.new(service: service) do
+            raise error_in_command
+          end.set_fallback do |e|
+            1
+          end
+        end
+        commands.each(&:start)
+        sum = commands.map(&:get).inject(:+)
+        expect(sum).to eq(100)
+        service.shutdown
+      end
+    end
+
     context 'with not started' do
       it 'should throw NotStartedError without waiting' do
         command = sleep_command(sleep_time, 42)
