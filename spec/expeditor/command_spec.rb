@@ -71,7 +71,7 @@ RSpec.describe Expeditor::Command do
       it 'should not throw MultipleAssignmentError' do
         10.times { commands.each(&:start) }
         commands.each(&:wait)
-        # Wait untill circuit is closed.
+        # Wait until circuit is closed.
         sleep period * 2
 
         command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
