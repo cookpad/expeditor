@@ -17,16 +17,16 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with normal and sleep' do
+      let(:event) { Concurrent::Event.new }
+
       it 'should start dependencies concurrently' do
-        start = Time.now
-        command1 = sleep_command(0.1, 1)
-        command2 = sleep_command(0.2, 2)
+        command1 = Expeditor::Command.new { event.wait(1); 1 }
+        command2 = Expeditor::Command.new { event.set; 2 }
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
         command3.start
         expect(command3.get).to eq(3)
-        expect(Time.now - start).to be < 0.21
       end
     end
 
@@ -43,23 +43,26 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with sleep and failure' do
+      let(:sleep_time) { 1 }
+
       it 'should throw error immediately' do
-        start = Time.now
-        command1 = sleep_command(0.1, 42)
+        command1 = sleep_command(sleep_time, 42)
         command2 = error_command(error_in_command)
         command3 = Expeditor::Command.new(dependencies: [command1, command2]) do |v1, v2|
           v1 + v2
         end
+
         command3.start
+        start = Time.now
         expect { command3.get }.to raise_error(Expeditor::DependencyError)
-        expect(Time.now - start).to be < 0.1
+        expect(Time.now - start).to be < sleep_time
       end
     end
 
     context 'with large number of horizontal dependencies' do
       it 'should be ok' do
         commands = 100.times.map do
-          sleep_command(0.01, 1)
+          simple_command(1)
         end
         command = Expeditor::Command.new(dependencies: commands) do |*vs|
           vs.inject(:+)
@@ -97,93 +100,6 @@ RSpec.describe Expeditor::Command do
         end
         command.start
         expect(command.get).to eq(100)
-      end
-    end
-  end
-
-  describe 'fallback function' do
-    context 'with normal' do
-      it 'should be normal value' do
-        command = simple_command(42).set_fallback { 0 }
-        command.start
-        expect(command.get).to eq(42)
-      end
-    end
-
-    context 'with failure of normal' do
-      it 'should be fallback value' do
-        command = error_command(error_in_command).set_fallback { 0 }
-        command.start
-        expect(command.get).to eq(0)
-      end
-    end
-
-    context 'with fail both' do
-      let(:error_in_fallback) { Class.new(Exception) }
-
-      it 'should throw fallback error' do
-        command = error_command(error_in_command).set_fallback do
-          raise error_in_fallback
-        end
-        command.start
-        expect { command.get }.to raise_error(error_in_fallback)
-      end
-    end
-
-    context 'with large number of commands' do
-      it 'should not throw any errors' do
-        service = Expeditor::Service.new(executor: Concurrent::ThreadPoolExecutor.new(max_threads: 10, min_threads: 10, max_queue: 100))
-        commands = 100.times.map do
-          Expeditor::Command.new(service: service) do
-            raise error_in_command
-          end.set_fallback do |e|
-            1
-          end
-        end
-        commands.each(&:start)
-        sum = commands.map(&:get).inject(:+)
-        expect(sum).to eq(100)
-        service.shutdown
-      end
-    end
-  end
-
-  describe 'entire' do
-    context 'with complex example' do
-      it 'should be ok' do
-        command1 = sleep_command(0.1, 1)
-        command2 = sleep_command(1000, 'timeout!', timeout: 0.5)
-        fallback_command2 = command2.set_fallback do |e|
-          2
-        end
-        command3 = Expeditor::Command.new(dependencies: [command1, fallback_command2]) do |v1, v2|
-          sleep 0.2
-          v1 + v2 + 4
-        end
-        command4 = Expeditor::Command.new(dependencies: [command2, command3]) do |v2, v3|
-          sleep 0.3
-          v2 + v3 + 8
-        end
-        fallback_command4 = command4.set_fallback do
-          8
-        end
-
-        start = Time.now
-        fallback_command4.start
-
-        # command is same as fallback command.
-        expect(command2).to eq fallback_command2
-        expect(command4).to eq fallback_command4
-
-        expect(command1.get).to eq(1)
-        expect(Time.now - start).to be < 0.12
-        expect(fallback_command4.get).to eq(17)
-        expect(Time.now - start).to be < 1.12
-
-        expect(command1.get).to eq(1)
-        expect(fallback_command2.get).to eq(2)
-        expect(command3.get).to eq(7)
-        expect(Time.now - start).to be < 1.12
       end
     end
   end
