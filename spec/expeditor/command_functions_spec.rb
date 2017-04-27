@@ -103,44 +103,4 @@ RSpec.describe Expeditor::Command do
       end
     end
   end
-
-  describe 'entire' do
-    context 'with complex example' do
-      it 'should be ok' do
-        command1 = sleep_command(0.1, 1)
-        command2 = sleep_command(1000, 'timeout!', timeout: 0.5)
-        fallback_command2 = command2.set_fallback do |e|
-          2
-        end
-        command3 = Expeditor::Command.new(dependencies: [command1, fallback_command2]) do |v1, v2|
-          sleep 0.2
-          v1 + v2 + 4
-        end
-        command4 = Expeditor::Command.new(dependencies: [command2, command3]) do |v2, v3|
-          sleep 0.3
-          v2 + v3 + 8
-        end
-        fallback_command4 = command4.set_fallback do
-          8
-        end
-
-        start = Time.now
-        fallback_command4.start
-
-        # command is same as fallback command.
-        expect(command2).to eq fallback_command2
-        expect(command4).to eq fallback_command4
-
-        expect(command1.get).to eq(1)
-        expect(Time.now - start).to be < 0.12
-        expect(fallback_command4.get).to eq(17)
-        expect(Time.now - start).to be < 1.12
-
-        expect(command1.get).to eq(1)
-        expect(fallback_command2.get).to eq(2)
-        expect(command3.get).to eq(7)
-        expect(Time.now - start).to be < 1.12
-      end
-    end
-  end
 end
