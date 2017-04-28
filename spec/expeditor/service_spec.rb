@@ -63,8 +63,10 @@ RSpec.describe Expeditor::Service do
   end
 
   describe '#shutdown' do
+    let(:executor) { Concurrent::ThreadPoolExecutor.new(min_threads: 2, max_threads: 2, max_queue: 1000) }
+    let(:service) { Expeditor::Service.new(executor: executor) }
+
     it 'should reject execution' do
-      service = Expeditor::Service.new
       service.shutdown
       command = Expeditor::Command.start(service: service) do
         42
@@ -73,18 +75,15 @@ RSpec.describe Expeditor::Service do
     end
 
     it 'should not kill queued tasks' do
-      service = Expeditor::Service.new
-      commands = (0..2).map do |i|
+      commands = (1..10).map do |i|
         Expeditor::Command.new(service: service) do
-          # Trigger service.shutdown while processing commands
-          service.shutdown if i == 1
+          sleep 0.001
           1
         end
       end
-      command = Expeditor::Command.start(service: service, dependencies: commands) do |*vs|
-        vs.inject(:+)
-      end
-      expect(command.get).to eq(3)
+      commands.each(&:start)
+      service.shutdown
+      expect(commands.map(&:get).inject(0, &:+)).to eq(10)
     end
   end
 
