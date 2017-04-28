@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "concurrent-ruby", ">= 1.0.0"
   spec.add_runtime_dependency "retryable", "> 1.0"
 
+  spec.add_development_dependency "benchmark-ips"
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "concurrent-ruby-ext", ">= 1.0.0"
   spec.add_development_dependency "rake"
