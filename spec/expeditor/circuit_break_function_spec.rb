@@ -5,7 +5,7 @@ RSpec.describe Expeditor::Command do
     context 'with circuit break' do
       it 'should reject execution' do
         executor = Concurrent::ThreadPoolExecutor.new(max_queue: 0)
-        service = Expeditor::Service.new(executor: executor, threshold: 0.0, non_break_count: 2, sleep: 0, period: 10)
+        service = Expeditor::Service.new(executor: executor, threshold: 0.1, non_break_count: 2, sleep: 1, period: 10)
 
         3.times do
           Expeditor::Command.new(service: service) do
@@ -120,15 +120,11 @@ RSpec.describe Expeditor::Command do
       end
     end
 
-    context 'with dependency\'s error of circuit break ' do
+    context "with dependency's error of circuit break" do
+      let(:executor) { Concurrent::ThreadPoolExecutor.new(max_threads: 100) }
+      let(:service) { Expeditor::Service.new(executor: executor, threshold: 0.2, non_break_count: 10, period: 10, sleep: 5) }
+
       it 'should not fall deadlock' do
-        service = Expeditor::Service.new(
-          executor: Concurrent::ThreadPoolExecutor.new(max_threads: 100),
-          threshold: 0.2,
-          non_break_count: 10,
-          period: 10,
-          sleep: 0,
-        )
         failure_commands = 20.times.map do
           Expeditor::Command.new(service: service) do
             raise RuntimeError
