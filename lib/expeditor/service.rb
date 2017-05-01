@@ -6,6 +6,7 @@ module Expeditor
     attr_accessor :fallback_enabled
 
     def initialize(opts = {})
+      @mutex = Mutex.new
       @executor = opts.fetch(:executor) { Concurrent::ThreadPoolExecutor.new }
       @threshold = opts.fetch(:threshold, 0.5)
       @non_break_count = opts.fetch(:non_break_count, 20)
@@ -54,16 +55,14 @@ module Expeditor
     def open?
       if @breaking
         if Time.now - @break_start > @sleep
-          @breaking = false
-          @break_start = nil
+          change_state(false, nil)
         else
           return true
         end
       end
       open = calc_open
       if open
-        @breaking = true
-        @break_start = Time.now
+        change_state(true, Time.now)
       end
       open
     end
@@ -84,10 +83,10 @@ module Expeditor
       @bucket.current
     end
 
+    # Thread-unsafe.
     def reset_status!
       @bucket = Expeditor::Bucket.new(@bucket_opts)
-      @breaking = false
-      @break_start = nil
+      change_state(false, nil)
     end
 
     private
@@ -100,6 +99,13 @@ module Expeditor
         failure_count.to_f / total_count.to_f >= @threshold
       else
         false
+      end
+    end
+
+    def change_state(breaking, break_start)
+      @mutex.synchronize do
+        @breaking = breaking
+        @break_start = break_start
       end
     end
   end
