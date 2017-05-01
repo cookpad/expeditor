@@ -240,6 +240,8 @@ RSpec.describe Expeditor::Command do
     end
 
     context 'with fallback but normal success' do
+      let(:sleep_time) { 10 }
+
       it 'should not wait fallback execution' do
         command = simple_command(42).set_fallback do
           sleep sleep_time
