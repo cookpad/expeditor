@@ -47,15 +47,15 @@ module Expeditor
       !!fallback_enabled
     end
 
-    # break circuit?
+    # Return whether the circuit is open or not.
     #
-    # XXX: support half-open state to make use of `sleep` option.
-    # Currently, `sleep` option is useless because we mark failure again even after passing
-    # the `sleep` time.
+    # When breaking and sleep time is passed, the circuit breaker try to close the circuit.
+    # So the service metrics are reset and subsequent command executions are allowed (will not be breaked).
     def open?
       if @breaking
         if Time.now - @break_start > @sleep
-          change_state(false, nil)
+          reset_status!
+          return false
         else
           return true
         end
@@ -83,10 +83,12 @@ module Expeditor
       @bucket.current
     end
 
-    # Thread-unsafe.
     def reset_status!
-      @bucket = Expeditor::Bucket.new(@bucket_opts)
-      change_state(false, nil)
+      @mutex.synchronize do
+        @bucket = Expeditor::Bucket.new(@bucket_opts)
+        @breaking = false
+        @break_start = nil
+      end
     end
 
     private

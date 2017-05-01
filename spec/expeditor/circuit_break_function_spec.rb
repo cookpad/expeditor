@@ -37,8 +37,6 @@ RSpec.describe Expeditor::Command do
 
     context 'with circuit break and wait' do
       it 'should reject execution and back' do
-        skip 'Need half-open state for circuit breaker'
-
         sleep_value = 0.03
         config = { threshold: 0.1, non_break_count: 5, sleep: sleep_value, period: 0.1 }
         service = Expeditor::Service.new(config)
