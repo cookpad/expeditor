@@ -12,7 +12,7 @@ RSpec.describe Expeditor::Command do
             raise RuntimeError
           end.start.wait
         end
-        expect(service.open?).to eq(true)
+        expect(service.breaking?).to eq(true)
 
         command = Expeditor::Command.new(service: service) { 42 }.start
         expect { command.get }.to raise_error(Expeditor::CircuitBreakError)
@@ -47,7 +47,7 @@ RSpec.describe Expeditor::Command do
         end
         failure_commands.each(&:start)
         failure_commands.each(&:wait)
-        expect(service.open?).to eq(true)
+        expect(service.breaking?).to eq(true)
 
         # Store break count to compare later.
         last_breaked_count = service.status.break
@@ -58,12 +58,11 @@ RSpec.describe Expeditor::Command do
         success_commands.each(&:start)
         success_commands.each(&:wait)
         # The executions were short circuited.
-        expect(service.open?).to eq(true)
+        expect(service.breaking?).to eq(true)
         expect(service.status.break).to be > last_breaked_count
 
         # Wait sleep time then circuit bacomes half-open.
         sleep sleep_value + 0.01
-        expect(service.open?).to eq(false)
 
         # The circuit is half-open now so the circuit breaker allow single
         # request to check the dependent service is healthy or not. The circuit
@@ -78,7 +77,7 @@ RSpec.describe Expeditor::Command do
         expect(service.status.failure).to eq(0)
 
         # Since the last execution was succeed, the circuit becames closed.
-        expect(service.open?).to eq(false)
+        expect(service.breaking?).to eq(false)
         command = Expeditor::Command.new(service: service) { 1 }.start
         expect(command.get).to eq(1)
 

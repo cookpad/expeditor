@@ -47,24 +47,46 @@ module Expeditor
       !!fallback_enabled
     end
 
-    # Return whether the circuit is open or not.
-    #
-    # When breaking and sleep time is passed, the circuit breaker try to close the circuit.
-    # So the service metrics are reset and subsequent command executions are allowed (will not be breaked).
-    def open?
+    def breaking?
+      @breaking
+    end
+
+    # Run given block when the request is allowed, otherwise raise
+    # Expeditor::CircuitBreakError. When breaking and sleep time was passed,
+    # the circuit breaker tries to close the circuit. So subsequent single
+    # command execution is allowed (will not be breaked) to check the service
+    # is healthy or not. The circuit breaker only allows one request so other
+    # subsequent requests will be aborted with CircuitBreakError. When the test
+    # request succeeds, the circuit breaker resets the service status and
+    # closes the circuit.
+    def run_if_allowed
       if @breaking
-        if Time.now - @break_start > @sleep
+        now = Time.now
+
+        # Only one thread can be allowed to execute single request when half-opened.
+        allow_single_request = false
+        @mutex.synchronize do
+          allow_single_request = now - @break_start > @sleep
+          @break_start = now if allow_single_request
+        end
+
+        if allow_single_request
+          result = yield # This can be raise exception.
+          # The execution succeed, then
           reset_status!
-          return false
+          result
         else
-          return true
+          raise CircuitBreakError
+        end
+      else
+        open = calc_open
+        if open
+          change_state(true, Time.now)
+          raise CircuitBreakError
+        else
+          yield
         end
       end
-      open = calc_open
-      if open
-        change_state(true, Time.now)
-      end
-      open
     end
 
     # shutdown thread pool

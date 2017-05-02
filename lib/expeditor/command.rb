@@ -227,9 +227,7 @@ module Expeditor
     end
 
     def breakable_block(args, &block)
-      if @service.open?
-        raise CircuitBreakError
-      else
+      @service.run_if_allowed do
         block.call(*args)
       end
     end
