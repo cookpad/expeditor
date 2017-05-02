@@ -65,10 +65,17 @@ RSpec.describe Expeditor::Command do
         sleep sleep_value + 0.01
         expect(service.open?).to eq(false)
 
-        # The circuit is half-open now so the circuit breaker does not
-        # skip one further execution.
-        command = Expeditor::Command.new(service: service) { 1 }.start
+        # The circuit is half-open now so the circuit breaker allow single
+        # request to check the dependent service is healthy or not. The circuit
+        # breaker will only allow single request, so subsequent requests will
+        # trip the circuit. When the test request succeeds, the circuit breaker
+        # will reset the status.
+        command = Expeditor::Command.new(service: service) { sleep 0.01; 1 }.start
+        command2 = Expeditor::Command.new(service: service) { 1 }.start
+        expect { command2.get }.to raise_error(Expeditor::CircuitBreakError)
         expect(command.get).to eq(1)
+        expect(service.status.success).to eq(1)
+        expect(service.status.failure).to eq(0)
 
         # Since the last execution was succeed, the circuit becames closed.
         expect(service.open?).to eq(false)
