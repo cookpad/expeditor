@@ -11,7 +11,7 @@ module Expeditor
       @threshold = opts.fetch(:threshold, 0.5)
       @non_break_count = opts.fetch(:non_break_count, 20)
       @sleep = opts.fetch(:sleep, 1)
-      @bucket_opts = {
+      @rolling_number_opts = {
         size: 10,
         per: opts.fetch(:period, 10).to_f / 10
       }
@@ -20,27 +20,27 @@ module Expeditor
     end
 
     def success
-      @bucket.increment :success
+      @rolling_number.increment :success
     end
 
     def failure
-      @bucket.increment :failure
+      @rolling_number.increment :failure
     end
 
     def rejection
-      @bucket.increment :rejection
+      @rolling_number.increment :rejection
     end
 
     def timeout
-      @bucket.increment :timeout
+      @rolling_number.increment :timeout
     end
 
     def break
-      @bucket.increment :break
+      @rolling_number.increment :break
     end
 
     def dependency
-      @bucket.increment :dependency
+      @rolling_number.increment :dependency
     end
 
     def fallback_enabled?
@@ -96,18 +96,18 @@ module Expeditor
     end
 
     def status
-      @bucket.total
+      @rolling_number.total
     end
 
     # @deprecated
     def current_status
-      warn 'Expeditor::Service#current_status is deprecated. Please use #status instead'
-      @bucket.current
+      warn 'Expeditor::Service#current_status is deprecated. Please use #status instead.'
+      @rolling_number.current
     end
 
     def reset_status!
       @mutex.synchronize do
-        @bucket = Expeditor::Bucket.new(@bucket_opts)
+        @rolling_number = Expeditor::RollingNumber.new(@rolling_number_opts)
         @breaking = false
         @break_start = nil
       end
@@ -116,7 +116,7 @@ module Expeditor
     private
 
     def calc_open
-      s = @bucket.total
+      s = @rolling_number.total
       total_count = s.success + s.failure + s.timeout
       if total_count >= [@non_break_count, 1].max
         failure_count = s.failure + s.timeout

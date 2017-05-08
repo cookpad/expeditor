@@ -1,13 +1,13 @@
 require 'expeditor/status'
 
 module Expeditor
-  # Bucket is a data structure like circular buffer. It holds some status
-  # objects and it rolls statuses each `per` time (default is 1 second). Once
-  # it reaches the end of statuses array, it backs to start of statuses array
-  # and then reset the status and resumes recording. This is done so that the
-  # statistics are recorded gradually with short time interval rahter than
-  # reset all the record every wide time range (default is 10 seconds).
-  class Bucket
+  # A RollingNumber holds some Status objects and it rolls statuses each `per`
+  # time (default is 1 second). Once it reaches the end of statuses array, it
+  # backs to start of statuses array and then reset the status and resumes
+  # recording. This is done so that the statistics are recorded gradually with
+  # short time interval rahter than reset all the record every wide time range
+  # (default is 10 seconds).
+  class RollingNumber
     def initialize(opts = {})
       @mutex = Mutex.new
       @current_index = 0
@@ -70,11 +70,11 @@ module Expeditor
     end
 
     # This logic is used for cutting passing size. When passing size is greater
-    # than buckets size, we can cut passing size to less than bucket size
-    # because the buckets are circulated.
+    # than statuses size, we can cut passing size to less than statuses size
+    # because the statuses are circulated.
     #
     # `*` is current position.
-    # When the bucket size is 3:
+    # When the statuses size is 3:
     #
     #   [*, , ]
     #

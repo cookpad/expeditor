@@ -1,4 +1,4 @@
-require 'expeditor/bucket'
+require 'expeditor/rolling_number'
 require 'expeditor/command'
 require 'expeditor/errors'
 require 'expeditor/rich_future'
