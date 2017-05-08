@@ -23,6 +23,9 @@ RSpec.describe Expeditor::Status do
       end
 
       it 'should be increased normally if #increment is called in parallel' do
+        # XXX: Remove this example...
+        skip 'Status is not thread safe now and it have no need to be so...'
+
         status = Expeditor::Status.new
         threads = 1000.times.map do
           Thread.start do
@@ -46,6 +49,30 @@ RSpec.describe Expeditor::Status do
         expect(status.rejection).to eq(1)
         expect(status.timeout).to eq(1)
       end
+    end
+  end
+
+  describe '#merge!' do
+    let(:original) { Expeditor::Status.new }
+    let(:other) { Expeditor::Status.new }
+    before do
+      i = 1
+      [original, other].each do |s|
+        %i[success failure rejection timeout].each do |type|
+          s.increment(type, i)
+          i += 1
+        end
+      end
+    end
+
+    it 'merges destructively and returns self' do
+      back = original.success
+      result = original.merge!(other)
+
+      expect(result.success).not_to eq(back)
+      expect(result.success).to eq(original.success)
+      expect(result.success).not_to eq(other.success)
+      expect(result).to equal(original)
     end
   end
 end

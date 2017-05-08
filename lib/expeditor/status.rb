@@ -1,32 +1,44 @@
 module Expeditor
+  # Thread unsafe.
   class Status
-    attr_accessor :success
-    attr_accessor :failure
-    attr_accessor :rejection
-    attr_accessor :timeout
-    attr_accessor :break
-    attr_accessor :dependency
+    attr_reader :success
+    attr_reader :failure
+    attr_reader :rejection
+    attr_reader :timeout
+    attr_reader :break
+    attr_reader :dependency
 
     def initialize
       set(0, 0, 0, 0, 0, 0)
     end
 
-    def increment(type)
+    def increment(type, i = 1)
       case type
       when :success
-        @success += 1
+        @success += i
       when :failure
-        @failure += 1
+        @failure += i
       when :rejection
-        @rejection += 1
+        @rejection += i
       when :timeout
-        @timeout += 1
+        @timeout += i
       when :break
-        @break += 1
+        @break += i
       when :dependency
-        @dependency += 1
+        @dependency += i
       else
+        raise ArgumentError.new("Unknown type: #{type}")
       end
+    end
+
+    def merge!(other)
+      increment(:success, other.success)
+      increment(:failure, other.failure)
+      increment(:rejection, other.rejection)
+      increment(:timeout, other.timeout)
+      increment(:break, other.break)
+      increment(:dependency, other.dependency)
+      self
     end
 
     def reset
