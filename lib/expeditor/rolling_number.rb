@@ -49,7 +49,9 @@ module Expeditor
       status
     end
 
+    # @deprecated Don't use, use `#total` instead.
     def current
+      warn 'Expeditor::RollingNumber#current is deprecated. Please use #total instead to fetch correct status object.'
       @mutex.synchronize do
         update
         @statuses[@current_index]

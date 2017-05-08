@@ -99,7 +99,7 @@ module Expeditor
       @rolling_number.total
     end
 
-    # @deprecated
+    # @deprecated Use `#status` instead.
     def current_status
       warn 'Expeditor::Service#current_status is deprecated. Please use #status instead.'
       @rolling_number.current
