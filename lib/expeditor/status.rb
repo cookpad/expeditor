@@ -1,4 +1,5 @@
 module Expeditor
+  # Thread unsafe.
   class Status
     attr_reader :success
     attr_reader :failure
