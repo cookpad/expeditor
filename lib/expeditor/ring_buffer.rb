@@ -1,6 +1,7 @@
 module Expeditor
   # Circular buffer with user-defined initialization and optimized `move`
-  # implementation.
+  # implementation. The next element will be always initialized with
+  # user-defined initialization proc.
   #
   # Thread unsafe.
   class RingBuffer
@@ -63,17 +64,12 @@ module Expeditor
       end
     end
 
-    # Move and initialize
     def next_element
       if @current_index == @size - 1
         @current_index = 0
       else
         @current_index += 1
       end
-      initialize_current_element
-    end
-
-    def initialize_current_element
       @elements[@current_index] = @initialize_proc.call
     end
   end
