@@ -2,19 +2,17 @@ require 'expeditor/status'
 require 'expeditor/ring_buffer'
 
 module Expeditor
-  # A RollingNumber holds some Status objects and it rolls statuses each `per`
-  # time (default is 1 second). Once it reaches the end of statuses array, it
-  # backs to start of statuses array and then reset the status and resumes
-  # recording. This is done so that the statistics are recorded gradually with
-  # short time interval rahter than reset all the record every wide time range
-  # (default is 10 seconds).
+  # A RollingNumber holds some Status objects and it rolls statuses each
+  # `per_time` (default is 1 second). This is done so that the statistics are
+  # recorded gradually with short time interval rahter than reset all the
+  # record every wide time range (default is 10 seconds).
   class RollingNumber
-    def initialize(opts = {})
+    def initialize(size:, per_time:)
       @mutex = Mutex.new
-      @ring = RingBuffer.new(opts.fetch(:size, 10)) do
+      @ring = RingBuffer.new(size) do
         Expeditor::Status.new
       end
-      @per_time = opts.fetch(:per, 1)
+      @per_time = per_time
       @current_start = Time.now
     end
 

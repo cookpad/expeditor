@@ -4,7 +4,7 @@ RSpec.describe Expeditor::RollingNumber do
   describe '#increment' do
     context 'with same status' do
       it 'should be increased' do
-        rolling_number = Expeditor::RollingNumber.new(size: 10, per: 1)
+        rolling_number = Expeditor::RollingNumber.new(size: 10, per_time: 1)
         rolling_number.increment :success
         rolling_number.increment :success
         rolling_number.increment :success
@@ -14,7 +14,7 @@ RSpec.describe Expeditor::RollingNumber do
 
     context 'across statuses' do
       it 'should be ok' do
-        rolling_number = Expeditor::RollingNumber.new(size: 10, per: 0.01)
+        rolling_number = Expeditor::RollingNumber.new(size: 10, per_time: 0.01)
         rolling_number.increment :success
         sleep 0.01
         rolling_number.increment :success
@@ -27,8 +27,8 @@ RSpec.describe Expeditor::RollingNumber do
     context 'with no limit exceeded' do
       it 'should be ok' do
         size = 1000
-        per = 0.001
-        rolling_number = Expeditor::RollingNumber.new(size: size, per: per)
+        per_time = 0.001
+        rolling_number = Expeditor::RollingNumber.new(size: size, per_time: per_time)
         20.times do |n|
           rolling_number.increment :success
           sleep 0.002
@@ -41,8 +41,8 @@ RSpec.describe Expeditor::RollingNumber do
     context 'with limit exceeded' do
       it 'should be ok' do
         size = 5
-        per = 0.001
-        rolling_number = Expeditor::RollingNumber.new(size: size, per: per)
+        per_time = 0.001
+        rolling_number = Expeditor::RollingNumber.new(size: size, per_time: per_time)
         10.times do
           rolling_number.increment :success
         end
@@ -54,19 +54,19 @@ RSpec.describe Expeditor::RollingNumber do
 
   context 'passing many (> size) sliced time' do
     let(:size) { 3 }
-    let(:per) { 0.01 }
+    let(:per_time) { 0.01 }
 
     it 'resets all statuses' do
-      rolling_number = Expeditor::RollingNumber.new(size: size, per: per)
+      rolling_number = Expeditor::RollingNumber.new(size: size, per_time: per_time)
       # Make all statuses dirty.
       3.times do
         3.times { rolling_number.increment(:success) }
-        sleep per
+        sleep per_time
       end
       # Move to next rolling_number.
-      sleep per
+      sleep per_time
       # Pass size + 1 rolling_numbers.
-      sleep per * size
+      sleep per_time * size
       expect(rolling_number.total.success).to eq(0)
     end
   end

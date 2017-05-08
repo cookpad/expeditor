@@ -11,9 +11,10 @@ module Expeditor
       @threshold = opts.fetch(:threshold, 0.5)
       @non_break_count = opts.fetch(:non_break_count, 20)
       @sleep = opts.fetch(:sleep, 1)
+      granularity = 10
       @rolling_number_opts = {
-        size: 10,
-        per: opts.fetch(:period, 10).to_f / 10
+        size: granularity,
+        per_time: opts.fetch(:period, 10).to_f / granularity
       }
       reset_status!
       @fallback_enabled = true
