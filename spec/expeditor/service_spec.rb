@@ -1,20 +1,20 @@
 require 'spec_helper'
 
 RSpec.describe Expeditor::Service do
-  describe '#open?' do
+  describe '#run_if_allowed' do
     context 'with no count' do
-      it 'should be false' do
+      it 'runs given block' do
         options = {
           threshold: 0,
           non_break_count: 0,
         }
         service = Expeditor::Service.new(options)
-        expect(service.open?).to be false
+        expect(service.run_if_allowed { 1 }).to be(1)
       end
     end
 
     context 'within non_break_count' do
-      it 'should be false' do
+      it 'runs given block' do
         options = {
           threshold: 0.0,
           non_break_count: 100,
@@ -23,12 +23,12 @@ RSpec.describe Expeditor::Service do
         99.times do
           service.failure
         end
-        expect(service.open?).to be false
+        expect(service.run_if_allowed { 1 }).to be(1)
       end
     end
 
     context 'with non_break_count exceeded but not exceeded threshold' do
-      it 'should be false' do
+      it 'runs given block' do
         options = {
           threshold: 0.2,
           non_break_count: 100,
@@ -40,12 +40,12 @@ RSpec.describe Expeditor::Service do
         19.times do
           service.failure
         end
-        expect(service.open?).to be false
+        expect(service.run_if_allowed { 1 }).to be(1)
       end
     end
 
     context 'with non_break_count and threshold exceeded' do
-      it 'should be true' do
+      it 'raises CircuitBreakError' do
         options = {
           threshold: 0.2,
           non_break_count: 100,
@@ -57,7 +57,10 @@ RSpec.describe Expeditor::Service do
         20.times do
           service.failure
         end
-        expect(service.open?).to be true
+
+        expect {
+          service.run_if_allowed { 1 }
+        }.to raise_error(Expeditor::CircuitBreakError)
       end
     end
   end
@@ -113,15 +116,19 @@ RSpec.describe Expeditor::Service do
   end
 
   describe '#reset_status!' do
-    let(:service) { Expeditor::Service.new(non_break_count: 1) }
+    let(:service) { Expeditor::Service.new(non_break_count: 1, threshold: 0.1) }
 
     it "resets the service's status" do
       2.times do
         service.failure
       end
-      expect(service.open?).to be(true)
+      expect {
+        service.run_if_allowed { 1 }
+      }.to raise_error(Expeditor::CircuitBreakError)
+      expect(service.breaking?).to be(true)
+
       service.reset_status!
-      expect(service.open?).to be(false)
+      expect(service.breaking?).to be(false)
     end
   end
 

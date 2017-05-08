@@ -28,8 +28,8 @@ module Expeditor
       def dependency
       end
 
-      def open?
-        false
+      def run_if_allowed
+        yield
       end
     end
   end
