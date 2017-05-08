@@ -1,3 +1,10 @@
+## 0.7.0
+- Add `gem 'concurrent-ruby-ext'` to your Gemfile if you want to use that gem.
+    - We should not depend on this in a gemspec [#27](https://github.com/cookpad/expeditor/pull/27)
+- Fix possible race conditions.
+- Fix bug on cutting passing size [#30](https://github.com/cookpad/expeditor/pull/30)
+- Implement sleep feature on circuit breaker [#36](https://github.com/cookpad/expeditor/pull/36)
+
 ## 0.6.0
 - Improve default configuration of circuit breaker [#25](https://github.com/cookpad/expeditor/pull/25)
   - Default `non_break_count` is reduced from 100 to 20
