@@ -18,34 +18,20 @@ module Expeditor
       @current_start = Time.now
     end
 
+    # @params [Symbol] type
     def increment(type)
       @mutex.synchronize do
         update
-        @ring.current.increment type
+        @ring.current.increment(type)
       end
     end
 
+    # @return [Expeditor::Status] Newly created status
     def total
-      acc = @mutex.synchronize do
+      @mutex.synchronize do
         update
-        @ring.all.inject([0, 0, 0, 0, 0, 0]) do |i, s|
-          i[0] += s.success
-          i[1] += s.failure
-          i[2] += s.rejection
-          i[3] += s.timeout
-          i[4] += s.break
-          i[5] += s.dependency
-          i
-        end
+        @ring.all.inject(Expeditor::Status.new) {|i, s| i.merge!(s) }
       end
-      status = Expeditor::Status.new
-      status.success = acc[0]
-      status.failure = acc[1]
-      status.rejection = acc[2]
-      status.timeout = acc[3]
-      status.break = acc[4]
-      status.dependency = acc[5]
-      status
     end
 
     # @deprecated Don't use, use `#total` instead.

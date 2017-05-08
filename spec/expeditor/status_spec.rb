@@ -48,4 +48,28 @@ RSpec.describe Expeditor::Status do
       end
     end
   end
+
+  describe '#merge!' do
+    let(:original) { Expeditor::Status.new }
+    let(:other) { Expeditor::Status.new }
+    before do
+      i = 1
+      [original, other].each do |s|
+        %i[success failure rejection timeout].each do |type|
+          s.increment(type, i)
+          i += 1
+        end
+      end
+    end
+
+    it 'merges destructively and returns self' do
+      back = original.success
+      result = original.merge!(other)
+
+      expect(result.success).not_to eq(back)
+      expect(result.success).to eq(original.success)
+      expect(result.success).not_to eq(other.success)
+      expect(result).to equal(original)
+    end
+  end
 end
