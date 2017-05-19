@@ -137,7 +137,7 @@ The circuit breaker needs a service metrics (success, failure, timeout, ...) to 
 Expeditor's circuit breaker has a few configuration for how it collects service metrics and how it opens the circuit.
 
 For service metrics, Expeditor collects them with the given time window.
-The metrics is guradually collected by breaking given time window into some peice of short time windows and resetting previous metrics when passing each short time window.
+The metrics is gradually collected by breaking given time window into some peice of short time windows and resetting previous metrics when passing each short time window.
 
 `non_break_count` is used to ignore requests to the service which is not frequentlly requested. Configure this value considering your estimated "requests per period to the service".
 For example, when `period = 10` and `non_break_count = 20` and the requests do not occur more than 20 per 10 seconds, the circuit never opens because Expeditor ignores that "small number of requests".
