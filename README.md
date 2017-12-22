@@ -139,10 +139,6 @@ Expeditor's circuit breaker has a few configuration for how it collects service 
 For service metrics, Expeditor collects them with the given time window.
 The metrics is gradually collected by breaking given time window into some peice of short time windows and resetting previous metrics when passing each short time window.
 
-`non_break_count` is used to ignore requests to the service which is not frequentlly requested. Configure this value considering your estimated "requests per period to the service".
-For example, when `period = 10` and `non_break_count = 20` and the requests do not occur more than 20 per 10 seconds, the circuit never opens because Expeditor ignores that "small number of requests".
-If you don't ignore the failures in that case, set `non_break_count` to smaller value than `20`.
-
 ```ruby
 service = Expeditor::Service.new(
   threshold: 0.5,     # If the failure rate is more than or equal to threshold, the circuit will be opened.
@@ -155,6 +151,17 @@ command = Expeditor::Command.new(service: service) do
   ...
 end
 ```
+
+`non_break_count` is used to ignore requests to the service which is not frequentlly requested. Configure this value considering your estimated "requests per period to the service".
+For example, when `period = 10` and `non_break_count = 20` and the requests do not occur more than 20 per 10 seconds, the circuit never opens because Expeditor ignores that "small number of requests".
+If you don't ignore the failures in that case, set `non_break_count` to smaller value than `20`.
+
+The default values are:
+
+- threshold: 0.5
+- sleep: 1
+- non_break_count: 20
+- period: 10
 
 ### synchronous execution
 
