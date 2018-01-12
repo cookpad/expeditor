@@ -141,10 +141,10 @@ The metrics is gradually collected by breaking given time window into some peice
 
 ```ruby
 service = Expeditor::Service.new(
-  threshold: 0.5,     # If the failure rate is more than or equal to threshold, the circuit will be opened.
-  sleep: 1,           # If once the circuit is opened, the circuit is still open until sleep time seconds is passed even though failure rate is less than threshold.
-  non_break_count: 20 # If the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold.
-  period: 10,         # Time window of collecting metrics (in seconds).
+  threshold: 0.5,      # If the failure rate is more than or equal to threshold, the circuit will be opened.
+  sleep: 1,            # If once the circuit is opened, the circuit is still open until sleep time seconds is passed even though failure rate is less than threshold.
+  non_break_count: 20, # If the total count of metrics is not more than non_break_count, the circuit is not opened even though failure rate is more than threshold.
+  period: 10,          # Time window of collecting metrics (in seconds).
 )
 
 command = Expeditor::Command.new(service: service) do
