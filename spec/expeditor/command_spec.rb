@@ -81,6 +81,30 @@ RSpec.describe Expeditor::Command do
         service.shutdown
       end
     end
+
+    context 'with allowed_exceptions' do
+      let(:service) { Expeditor::Service.new(threshold: 0.1, non_break_count: 0, sleep: 0, period: 1) }
+
+      it 'does not make circuit breaking on allowed_exceptions' do
+        error = Class.new(StandardError)
+        block = proc { raise error }
+
+        service.reset_status!
+        expect {
+          Expeditor::Command.start(service: service, &block).tap(&:start).get
+        }.to raise_error(error)
+        expect {
+          Expeditor::Command.start(service: service, &block).tap(&:start).get
+        }.to raise_error(Expeditor::CircuitBreakError)
+
+        service.reset_status!
+        2.times do
+          expect {
+            Expeditor::Command.start(service: service, allowed_exceptions: [error], &block).tap(&:start).get
+          }.to raise_error(error)
+        end
+      end
+    end
   end
 
   describe '#started?' do

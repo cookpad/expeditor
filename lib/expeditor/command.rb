@@ -14,6 +14,7 @@ module Expeditor
       @service = opts.fetch(:service, Expeditor::Services.default)
       @timeout = opts[:timeout]
       @dependencies = opts.fetch(:dependencies, [])
+      @allowed_exceptions = opts.fetch(:allowed_exceptions, [])
 
       @normal_future = nil
       @retryable_options = Concurrent::IVar.new
@@ -234,7 +235,7 @@ module Expeditor
 
     def metrics(reason)
       case reason
-      when nil
+      when nil, *@allowed_exceptions
         @service.success
       when Timeout::Error
         @service.timeout
