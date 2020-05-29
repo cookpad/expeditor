@@ -108,7 +108,7 @@ module Expeditor
 
     def reset_status!
       @mutex.synchronize do
-        @rolling_number = Expeditor::RollingNumber.new(@rolling_number_opts)
+        @rolling_number = Expeditor::RollingNumber.new(**@rolling_number_opts)
         @breaking = false
         @break_start = nil
       end
