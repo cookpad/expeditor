@@ -242,9 +242,13 @@ RSpec.describe Expeditor::RichFuture do
           42
         end
         mutex.lock
-        future1.execute
-        future2.execute
-        expect { future3.execute }.to raise_error(Expeditor::RejectedExecutionError)
+        begin
+          future1.execute
+          future2.execute
+          expect { future3.execute }.to raise_error(Expeditor::RejectedExecutionError)
+        ensure
+          mutex.unlock
+        end
       end
     end
   end
