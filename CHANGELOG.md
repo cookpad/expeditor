@@ -1,3 +1,6 @@
+## 0.7.1
+- Fix Ruby 2 style keyword arguments to support Ruby 3 [#45](https://github.com/cookpad/expeditor/pull/27)
+
 ## 0.7.0
 - Add `gem 'concurrent-ruby-ext'` to your Gemfile if you want to use that gem.
     - We should not depend on this in a gemspec [#27](https://github.com/cookpad/expeditor/pull/27)
