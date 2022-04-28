@@ -1,6 +1,6 @@
 # Expeditor
 [![Gem Version](https://badge.fury.io/rb/expeditor.svg)](http://badge.fury.io/rb/expeditor)
-[![Build Status](https://travis-ci.org/cookpad/expeditor.svg?branch=master)](https://travis-ci.org/cookpad/expeditor)
+[![Build Status](https://github.com/cookpad/expeditor/actions/workflows/test.yml/badge.svg)](https://github.com/cookpad/expeditor/actions/workflows/test.yml)
 
 Expeditor is a Ruby library that provides asynchronous execution and fault tolerance for microservices.
 
